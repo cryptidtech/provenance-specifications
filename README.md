@@ -1,4 +1,4 @@
-[![Community Specification 1.0](https://img.shields.io/badge/Community_Specification-1.0-blue)][0]
+[![Community Specification 1.0](https://img.shields.io/badge/Community_Specification-1.0-blue?style=flat-square)][0]
 [![](https://img.shields.io/badge/made%20by-Cryptid%20Technologies-gold.svg?style=flat-square)][1]
 [![](https://img.shields.io/badge/project-provenance-purple.svg?style=flat-square)][2]
 [![](https://img.shields.io/badge/project-multiformats-blue.svg?style=flat-square)][3]

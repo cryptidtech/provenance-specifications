@@ -38,7 +38,7 @@ Known patent licensing exclusions are available in the specification’s
 repository’s Notices.md file.
 
 Any feedback or questions on this document should be directed to
-[specifications repository][4].
+[specifications repository][1].
 
 THESE MATERIALS ARE PROVIDED “AS IS.” The Contributors and Licensees expressly
 disclaim any warranties (express, implied, or otherwise), including implied
@@ -74,11 +74,11 @@ recombining.
 
 This document refers to `varuint` encoded values throughout. The normative 
 reference for which can be found in the [multiformats unsigned-varint
-specification][5].
+specification][4].
 
 This document also refers to `sigils` the identify a codec or data type. The 
 normative reference for the list of sigils can be found in the [multiformats 
-multicodecs table][6].
+multicodecs table][5].
 
 ### [Terms and Definitions](#terms-and-definitions)
 
@@ -278,6 +278,5 @@ length (33 octets), and the 33 octets of key data.
 [1]: https://github.com/cryptidtech/provenance-specifications/
 [2]: https://github.com/multiformats/multiformats
 [3]: https://github.com/CommunitySpecification/1.0
-[4]: https://github.com/cryptidtech/provenance-specifications
-[5]: https://github.com/multiformats/unsigned-varint/blob/master/README.md
-[6]: https://github.com/multiformats/multicodecs/blob/master/table.csv
+[4]: https://github.com/multiformats/unsigned-varint/blob/master/README.md
+[5]: https://github.com/multiformats/multicodecs/blob/master/table.csv

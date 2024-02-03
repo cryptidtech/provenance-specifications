@@ -18,6 +18,9 @@ This specification is subject to the [Community Specification License 1.0][3].
 3. [Specification](#specification)
     1. [Signature Message](#signature-message)
     2. [Attributes](#attributes)
+4. [Examples](#examples)
+    1. [An EdDSA Multisig](#an-eddsa-multisig)
+    2. [A BLS12-381 G1 Multisig Share](#a-bls12-381-g1-multisig-share)
 
 ## [Foreword](#foreword)
 
@@ -34,7 +37,7 @@ Known patent licensing exclusions are available in the specification’s
 repository’s Notices.md file.
 
 Any feedback or questions on this document should be directed to
-[specifications repository][4].
+[specifications repository][1].
 
 THESE MATERIALS ARE PROVIDED “AS IS.” The Contributors and Licensees expressly
 disclaim any warranties (express, implied, or otherwise), including implied
@@ -63,11 +66,11 @@ This versino of the Multisig specification
 
 This document refers to `varuint` encoded values throughout. The normative 
 reference for which can be found in the [multiformats unsigned-varint
-specification][5].
+specification][4].
 
 This document also refers to `sigils` the identify a codec or data type. The 
 normative reference for the list of sigils can be found in the [multiformats 
-multicodecs table][6].
+multicodecs table][5].
 
 ### [Terms and Definitions](#terms-and-definitions)
 
@@ -156,10 +159,52 @@ Multikey, are required to verify the validity of a Multisig signature.
 : Codec-speicific threshold signature data. This is typically used to 
 accumulate threshold signature shares.
 
+## [Examples](#examples)
+
+### [An EdDSA Multisig](#an-eddsa-multisig)
+
+This example shows how a Multisig stores an EdDSA digital signature:
+
+```
+39                  -- varuint, Multisig sigil
+ed a1 03            -- varuint, EdDSA sigil
+00                  -- varuint, message length (0), detached signature
+01                  -- varuint, number of attributes
+  00                -- varuint, AttrId::SigData
+    40              -- varuint, attribute length (64 octets)
+      [64 octets]   -- signature data
+```
+
+### [A BLS12-381 G1 Multisig Share](#a-bls12-381-g1-multisig-share)
+
+This examples shows how a Multsig with a BLS12-381 G1 signature share is
+encoded:
+
+```
+39                  -- varuint, Multisig sigil
+fa a1 03            -- varuint, Bls12381G1SigShare sigil
+00                  -- varuint, message length (0), detached signature
+05                  -- varuint, number of attributes
+  00                -- varuint, AttrId::SigData
+    30              -- varuint, attribute length (48 octets)
+      [48 octets]   -- signature data
+  02                -- varuint, AttrId::Scheme
+    01              -- varuint, attribute length
+      [02]          -- varuint, Bls proof-of-possession
+  03                -- varuint, AttrId::Threshold
+    01              -- varuint, attribute length
+      [03]          -- varuint, 3 shares needed to reconstruct the signature
+  04                -- varuint, AttrId::Limit
+    01              -- varuint, length of attribute
+      [04]          -- varuint, 4 shares total
+  05                -- varuint, AttrId::ShareIdentifier
+    01              -- varuint, length of attribute
+      [01]          -- varuint, share number 1
+```
+
 [0]: https://cryptid.tech
 [1]: https://github.com/cryptidtech/provenance-specifications/
 [2]: https://github.com/multiformats/multiformats
 [3]: https://github.com/CommunitySpecification/1.0
-[4]: https://github.com/cryptidtech/provenance-specifications
-[5]: https://github.com/multiformats/unsigned-varint
-[6]: https://github.com/multiformats/multicodecs/blob/master/table.csv
+[4]: https://github.com/multiformats/unsigned-varint
+[5]: https://github.com/multiformats/multicodecs/blob/master/table.csv

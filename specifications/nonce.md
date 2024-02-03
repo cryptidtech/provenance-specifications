@@ -16,6 +16,9 @@ This specification is subject to the [Community Specification License 1.0][3].
     2. [Normative References](#normative-references)
     3. [Terms and Definitions](#terms-and-definitions)
 3. [Specification](#specification)
+4. [Examples](#examples)
+    1. [A Nonce with Random Data](#a-nonce-with-random-data)
+    2. [A Nonce with Multisig Data](#a-nonce-with-multisig-data)
 
 ## [Foreword](#foreword)
 
@@ -32,7 +35,7 @@ Known patent licensing exclusions are available in the specification’s
 repository’s Notices.md file.
 
 Any feedback or questions on this document should be directed to
-[specifications repository][4].
+[specifications repository][1].
 
 THESE MATERIALS ARE PROVIDED “AS IS.” The Contributors and Licensees expressly
 disclaim any warranties (express, implied, or otherwise), including implied
@@ -62,11 +65,11 @@ free to file an issue if you have a use case this does not cover.
 
 This document refers to `varuint` encoded values throughout. The normative 
 reference for which can be found in the [multiformats unsigned-varint
-specification][5].
+specification][4].
 
 This document also refers to `sigils` the identify a codec or data type. The 
 normative reference for the list of sigils can be found in the [multiformats 
-multicodecs table][6].
+multicodecs table][5].
 
 ### [Terms and Definitions](#terms-and-definitions)
 
@@ -101,10 +104,43 @@ The Nonce format is designed in such a way that tools only need support for
 `varuint` and `varbytes` processing to know exactly how many octets are in the 
 Nonce object so that it can skip over it if needed.
 
+## [Examples](#examples)
+
+### [A Nonce with Random Data](#a-nonce-with-random-data)
+
+This example shows how a Nonce containing random data is encoded:
+
+```
+3b                  -- varuint, nonce sigil
+  20                -- varuint, length of nonce data
+    [32 octets]     -- 32 octets of random data
+```
+
+### [A Nonce with Multisig Data](#a-nonce-with-multisig-data)
+
+This example shows how a Nonce containing an EdDSA [Multisig][6]—as used in some
+[VLADs][7]—is encoded:
+
+```
+3b                  -- varuint, nonce sigil
+  48                -- varuint, length of nonce data
+    [               -- 72 octets of the Multisig
+      39            -- varuint, Multisig sigil
+      ed a1 03      -- varuint, EdDSA sigil
+      [68 octets]   -- 68 octets of Multisig data
+    ]
+```
+
+In this example the data inside of the Nonce is a Multisig. The Multisig 
+consists of 72 octets that begins with the `0x39` Multisig sigil followed by 
+the `0xed` Ed25519 codec sigil signifying that this is an EdDSA signature. The 
+remaining 70 octets are the Multisig attributes of the signature.
+
 [0]: https://cryptid.tech 
 [1]: https://github.com/cryptidtech/provenance-specifications/
 [2]: https://github.com/multiformats/multiformats
 [3]: https://github.com/CommunitySpecification/1.0
-[4]: https://github.com/cryptidtech/provenance-specifications
-[5]: https://github.com/multiformats/unsigned-varint/blob/master/README.md
+[4]: https://github.com/multiformats/unsigned-varint/blob/master/README.md
 [5]: https://github.com/multiformats/multicodecs/blob/master/table.csv
+[6]: https://github.com/cryptidtech/provenance-specifications/blob/main/specifications/multisig.md
+[7]: https://github.com/cryptidtech/provenance-specifications/blob/main/specifications/vlad.md

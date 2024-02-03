@@ -36,7 +36,7 @@ Known patent licensing exclusions are available in the specification’s
 repository’s Notices.md file.
 
 Any feedback or questions on this document should be directed to
-[specifications repository][4].
+[specifications repository][1].
 
 THESE MATERIALS ARE PROVIDED “AS IS.” The Contributors and Licensees expressly
 disclaim any warranties (express, implied, or otherwise), including implied
@@ -64,21 +64,21 @@ current set of use cases.
 
 This document refers to `varuint` encoded values throughout. The normative 
 reference for which can be found in the [multiformats unsigned-varint
-specification][5].
+specification][4].
 
 This document refers to `sigils` the identify a codec or data type. The 
 normative reference for the list of sigils can be found in the [multiformats 
-multicodecs table][6].
+multicodecs table][5].
 
 This document refers to `CID` content identifiers. The normative reference for
-which can be found in the [multiformats cid specification][7]
+which can be found in the [multiformats cid specification][6]
 
 This document refers to `nonce` values. The normative reference for which can 
-be found in the [multiformats nonce specification][8]
+be found in the [multiformats nonce specification][7]
 
 This document refers to `multisig` encoded digital signatures. The normative 
 reference for which can be found in the [multiformats multisig
-specification][9].
+specification][8].
 
 ### [Terms and Definitions](#terms-and-definitions)
 
@@ -214,9 +214,8 @@ content addres CID (e.g. `0x01` v1, `0x02` v2, or `0x03` v3).
 [1]: https://github.com/cryptidtech/provenance-specifications/
 [2]: https://github.com/multiformats/multiformats
 [3]: https://github.com/CommunitySpecification/1.0
-[4]: https://github.com/cryptidtech/provenance-specifications
-[5]: https://github.com/multiformats/unsigned-varint/blob/master/README.md
-[6]: https://github.com/multiformats/multicodecs/blob/master/table.csv
-[7]: https://github.com/multiformats/cid/blob/master/README.md
-[8]: https://github.com/cryptidtech/provenance-specifications/blob/main/specifications/nonce.md
+[4]: https://github.com/multiformats/unsigned-varint/blob/master/README.md
+[5]: https://github.com/multiformats/multicodecs/blob/master/table.csv
+[6]: https://github.com/multiformats/cid/blob/master/README.md
+[7]: https://github.com/cryptidtech/provenance-specifications/blob/main/specifications/nonce.md
 [8]: https://github.com/cryptidtech/provenance-specifications/blob/main/specifications/multisig.md

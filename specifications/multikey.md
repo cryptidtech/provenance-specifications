@@ -3,11 +3,11 @@
 **Status: Pre-draft** \
 © 2024 Cryptid Technologies, Inc.
 
-[![](https://img.shields.io/badge/made%20by-Cryptid%20Technologies-gold.svg?style=flat-square)][0]
-[![](https://img.shields.io/badge/project-provenance-purple.svg?style=flat-square)][1]
-[![](https://img.shields.io/badge/project-multiformats-blue.svg?style=flat-square)][2]
+[![](https://img.shields.io/badge/made%20by-Cryptid%20Technologies-gold.svg?style=flat-square)][CRYPTID]
+[![](https://img.shields.io/badge/project-provenance-purple.svg?style=flat-square)][PROVSPEC]
+[![](https://img.shields.io/badge/project-multiformats-blue.svg?style=flat-square)][MULTIFORMATS]
 
-This specification is subject to the [Community Specification License 1.0][3].
+This specification is subject to the [Community Specification License 1.0][COMMUNITYSPEC].
 
 ## Contents
 1. [Foreword](#foreword)
@@ -38,7 +38,7 @@ Known patent licensing exclusions are available in the specification’s
 repository’s Notices.md file.
 
 Any feedback or questions on this document should be directed to
-[specifications repository][1].
+[specifications repository][PROVSPEC].
 
 THESE MATERIALS ARE PROVIDED “AS IS.” The Contributors and Licensees expressly
 disclaim any warranties (express, implied, or otherwise), including implied
@@ -74,11 +74,11 @@ recombining.
 
 This document refers to `varuint` encoded values throughout. The normative 
 reference for which can be found in the [multiformats unsigned-varint
-specification][4].
+specification][MULTIFORMATSREADME].
 
 This document also refers to `sigils` the identify a codec or data type. The 
 normative reference for the list of sigils can be found in the [multiformats 
-multicodecs table][5].
+multicodecs table][MULTIFORMATSTABLE].
 
 ### [Terms and Definitions](#terms-and-definitions)
 
@@ -212,7 +212,7 @@ using the Bcrypt PBKDF function with 10 rounds and a 32-byte salt value:
 [80 26]             -- varuint, Ed25519 private key codec 
 08                  -- varuint, length of comment 
   "test key"        -- 8 octets of UTF-8 comment data
-0a                  -- varuint, 10 attributes
+08                  -- varuint, 8 attributes
   00                -- varuint, AttrId::KeyIsEncrypted
     01              -- varuint, attribute length
       [01]          -- true, it is encrypted!
@@ -274,9 +274,9 @@ only one attrbute, the key data itself which is encoded as the varuint
 encoded `KeyData` attribute ID, followed by the varuint encoded attribute
 length (33 octets), and the 33 octets of key data.
 
-[0]: https://cryptid.tech
-[1]: https://github.com/cryptidtech/provenance-specifications/
-[2]: https://github.com/multiformats/multiformats
-[3]: https://github.com/CommunitySpecification/1.0
-[4]: https://github.com/multiformats/unsigned-varint/blob/master/README.md
-[5]: https://github.com/multiformats/multicodecs/blob/master/table.csv
+[CRYPTID]: https://cryptid.tech/
+[PROVSPEC]: https://github.com/cryptidtech/provenance-specifications/
+[MULTIFORMATS]: https://github.com/multiformats/multiformats/
+[COMMUNITYSPEC]: https://github.com/CommunitySpecification/1.0
+[MULTIFORMATSREADME]: https://github.com/multiformats/unsigned-varint/blob/master/README.md
+[MULTIFORMATSTABLE]: https://github.com/multiformats/multicodecs/blob/master/table.csv

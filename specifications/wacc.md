@@ -15,6 +15,12 @@ This specification is subject to the [Community Specification License 1.0][3]
     1. [Current Status](#current-status)
     2. [Normative References](#normative-references)
     3. [Terms and Definitions](#terms-and-definitions)
+3. [Specification](#specification)
+4. [Examples](#examples)
+   1. [WACC Logging](#wacc-logging)
+   2. [WACC Signature Verification](#wacc-signature-verification)
+   3. [WACC Locking Signature Verification](#wacc-locking-signature-verification)
+   4. [WACC Unlock Script](#wacc-unlock-script)
 
 ## [Foreword](#foreword)
 
@@ -74,6 +80,47 @@ specification][7].
 
 ### [Terms and Definitions](#terms-and-definitions)
 
+**Unlock**
+: The script that is executed to unlock an operation. Unlock operations
+push values onto the WACC VM stack that are satisfy conditions by the lock script.
+
+**Lock**
+: The script that is executed to lock an operation. Lock operations
+verify values pushed onto the WACC VM stack by the unlock script.
+If these values do not satisfy the conditions the operation is not allowed.
+
+## [Specification](#specification)
+
+## [Examples](#examples)
+
+WACC VM is a simple stack-based virtual machine that executes cryptographic
+operations in a push - pop manner. Push operations are the unlock script values.
+Pop operations are the lock script conditions that must be satisfied using the pushed
+values.
+
+### [WACC Logging](#wacc-logging)
+
+This example shows how to use the WACC API that provides a logging function to log messages
+
+[Rust](https://github.com/cryptidtech/wacc/blob/main/examples/log/src/lib.rs)
+
+### [WACC Signature Verification](#wacc-signature-verification)
+
+This example shows how to use the WACC API to verify a signature first
+
+[Rust](https://github.com/cryptidtech/wacc/blob/main/examples/signature_first/src/lib.rs)
+
+### [WACC Locking Signature Verification](#wacc-locking-signature-verification)
+
+This example shows how to use the WACC API to verify a signature using a lock script
+
+[Rust](https://github.com/cryptidtech/wacc/blob/main/examples/signature_lock/src/lib.rs)
+
+### [WACC Unlock Script](#wacc-unlock-script)
+
+This example shows how to use the WACC API to use the unlock script
+
+[Rust](https://github.com/cryptidtech/wacc/blob/main/examples/unlock/src/lib.rs)
 
 
 [0]: https://cryptid.tech 

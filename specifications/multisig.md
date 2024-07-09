@@ -60,7 +60,7 @@ from Multikey values and data to be signed.
 
 ### [Current Status](#current-status)
 
-This versino of the Multisig specification 
+This version of the Multisig specification 
 
 ### [Normative References](#normative-references)
 
@@ -83,7 +83,7 @@ multicodecs table][5].
 **Attributes**
 : Each Multisig object consists of a set of attributes identified by a
 name/numerical value with an associated binary value. This is how the Multikey
-supports all of the different codec-specific data and use cases.
+supports all the different codec-specific data and use cases.
 
 ## [Specification](#specification)
 

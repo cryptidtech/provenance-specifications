@@ -90,12 +90,12 @@ multicodecs table][MULTIFORMATSTABLE].
 
 **Comment**
 : A Multikey object contains a string that describes the key. This is
-application spedific.
+application specific.
 
 **Attributes**
 : Each Multikey object consists of a set of attributes identified by a
 name/numerical value with an associated binary value. This is how the Multikey
-supports all of the different codec-specific data and use cases.
+supports all the different codec-specific data and use cases.
 
 ## [Specification](#specification)
 

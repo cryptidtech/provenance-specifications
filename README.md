@@ -11,15 +11,13 @@ software supply chain, IP management, content authenticity, and identity.
 
 ## Specifications
 
-* Coming soon: Provenance Log
-* Coming soon: Wasm Cryptographic Constructs (WACC) VM API
+* [Provenance Logs][PLOGS]
+* [Wasm Cryptographic Constructs API][WACC]
 * Multicodec data objects
   * [Multikey][4]
   * [Multisig][5]
   * [Nonce][6]
 * [Very Long-lived Addresses (VLADs)][7]
-* Coming soon: Vlad Mapping Service (VMS)
-* Coming soon: Threshold Signing
 
 [0]: https://github.com/cryptidtech/provenance-specifications/blob/main/community_specification_license.md
 [1]: https://cryptid.tech
@@ -29,3 +27,5 @@ software supply chain, IP management, content authenticity, and identity.
 [5]: https://github.com/cryptidtech/provenance-specifications/blob/main/specifications/multisig.md
 [6]: https://github.com/cryptidtech/provenance-specifications/blob/main/specifications/nonce.md
 [7]: https://github.com/cryptidtech/provenance-specifications/blob/main/specifications/vlad.md
+[PLOGS]: https://github.com/cryptidtech/provenance-specifications/blob/main/specifications/provenance-logs.md
+[WACC]: https://github.com/cryptidtech/provenance-specifications/blob/main/specifications/wacc.md

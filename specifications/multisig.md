@@ -88,14 +88,15 @@ supports all of the different codec-specific data and use cases.
 ## [Specification](#specification)
 
 The following diagram explains the overall structure of a Multisig. A Multisig
-is identified by the `0x39` sigil followed by a key codec sigil, message, and a 
-variable number of codec-specific attributes.
+is identified by the `0x1239` sigil followed by a key codec sigil, message, and
+a variable number of codec-specific attributes. The sigil is encoded as a
+varuint `0xb924`.
 
 ```
 signing codec sigil     signature attributes
          |                     |
          v                     v
-0x39 <varuint> <message> <attributes>
+0xb924 <varuint> <message> <attributes>
 ^                  ^
 |                  |
 multisig    optional combined
@@ -159,6 +160,12 @@ Multikey, are required to verify the validity of a Multisig signature.
 : Codec-speicific threshold signature data. This is typically used to 
 accumulate threshold signature shares.
 
+**AlgorithmName (0x07)**
+: An arbitrary string name for the algorithm. This is optional and is intended
+to support arbitrary and/or non-standard signature types. Some implementations
+may set this attribute for standard algorithm signatures but do not rely upon
+that. Interpretation of the algorithm name is application specific.
+
 ## [Examples](#examples)
 
 ### [An EdDSA Multisig](#an-eddsa-multisig)
@@ -166,8 +173,8 @@ accumulate threshold signature shares.
 This example shows how a Multisig stores an EdDSA digital signature:
 
 ```
-39                  -- varuint, Multisig sigil
-ed a1 03            -- varuint, EdDSA sigil
+b9 24               -- varuint, Multisig sigil (0x1239)
+ed                  -- varuint, EdDSA sigil (0xed)
 00                  -- varuint, message length (0), detached signature
 01                  -- varuint, number of attributes
   00                -- varuint, AttrId::SigData
@@ -181,8 +188,8 @@ This examples shows how a Multsig with a BLS12-381 G1 signature share is
 encoded:
 
 ```
-39                  -- varuint, Multisig sigil
-fa a1 03            -- varuint, Bls12381G1SigShare sigil
+b9 24               -- varuint, Multisig sigil (0x1239)
+84 a6 c0 06         -- varuint, Bls12381G1SigShare sigil (0xd01304)
 00                  -- varuint, message length (0), detached signature
 05                  -- varuint, number of attributes
   00                -- varuint, AttrId::SigData

@@ -82,14 +82,14 @@ multicodecs table][5].
 ## [Specification](#specification)
 
 The following diagram shows the overall structure of a Nonce. A Nonce is
-identified by the `0x3b` sigil followed by a `varbytes` encoded array of
-octets.
+identified by the `0x123b` sigil followed by a `varbytes` encoded array of
+octets. The sigil is encoded as a varuint `0xbb24`.
 
 ```
 nonce sigil
  |
  v
-0x3b <varbytes>
+0xbb24 <varbytes>
          ^
          |
     nonce octets
@@ -111,7 +111,7 @@ Nonce object so that it can skip over it if needed.
 This example shows how a Nonce containing random data is encoded:
 
 ```
-3b                  -- varuint, nonce sigil
+bb 24               -- varuint, nonce sigil
   20                -- varuint, length of nonce data
     [32 octets]     -- 32 octets of random data
 ```
@@ -122,17 +122,17 @@ This example shows how a Nonce containing an EdDSA [Multisig][6]—as used in so
 [VLADs][7]—is encoded:
 
 ```
-3b                  -- varuint, nonce sigil
-  48                -- varuint, length of nonce data
-    [               -- 72 octets of the Multisig
-      39            -- varuint, Multisig sigil
-      ed a1 03      -- varuint, EdDSA sigil
-      [68 octets]   -- 68 octets of Multisig data
+bb 24               -- varuint, nonce sigil (0x123b)
+  49                -- varuint, length of nonce data
+    [               -- 73 octets of the Multisig
+      b9 24         -- varuint, Multisig sigil (0x1239)
+      ed            -- varuint, EdDSA sigil (0xed)
+      [70 octets]   -- 68 octets of Multisig data
     ]
 ```
 
 In this example the data inside of the Nonce is a Multisig. The Multisig 
-consists of 72 octets that begins with the `0x39` Multisig sigil followed by 
+consists of 72 octets that begins with the `0xb924` Multisig sigil followed by
 the `0xed` Ed25519 codec sigil signifying that this is an EdDSA signature. The 
 remaining 70 octets are the Multisig attributes of the signature.
 

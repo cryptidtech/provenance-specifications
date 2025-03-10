@@ -100,18 +100,19 @@ supports all the different codec-specific data and use cases.
 ## [Specification](#specification)
 
 The following diagram shows the overall structure of a Multikey. A Multikey
-is identified by the `0x3a` sigil followed by a codec sigil, comment, and a 
-variable number of codec-specific attributes.
+is identified by the `0x123a` sigil followed by a codec sigil, comment, and a
+variable number of codec-specific attributes. The multikey sigil is encoded as
+a varuint `0xba24`.
 
 ```
 multikey
 sigil         key comment
 |                  |
 v                  v
-0x3a <varuint> <comment> <attributes>
-         ^                    ^
-         |                    |
-    key codec sigil       key attributes
+0xba24 <varuint> <comment> <attributes>
+           ^                    ^
+           |                    |
+      key codec sigil       key attributes
 
 
 <comment> ::= <varbytes>
@@ -190,6 +191,18 @@ Please file an issue if you have a use case that requires a new attribute type.
 : Threshold signing codec-specific data. This is typically use to store the 
 accumulated key shares while gathring enough shares to recreate the key.
 
+**AlgorithmName (0x0c)**
+: An arbitrary string name for the algorithm. This is optional and is intended
+to support arbitrary and/or non-standard key types. Some implementations may
+set this attribute for standard algorithm keys but do not rely upon that.
+Interpretation of the algorithm name is application specific.
+
+**KeyType (0x0d)**
+: An arbitrary numeric key type attribute. This is optional and is intended to
+support arbitrary and/or non-standard key types. Some implementations may set
+this attribute for standard algorithm keys but do not rely upon that.
+Interpretation of the key type is application specific.
+
 ### [Secret Keys](#secret-keys)
 
 Secret keys are sensitive and should always be kept encrypted when at rest.
@@ -208,38 +221,38 @@ the ChaCha20-Poly1305 AEAD symmetric encryption algorithm using a key derived
 using the Bcrypt PBKDF function with 10 rounds and a 32-byte salt value:
 
 ```
-3a                  -- varuint, multikey sigil 
-[80 26]             -- varuint, Ed25519 private key codec 
+ba 24               -- varuint, multikey sigil (0x123a)
+80 26               -- varuint, Ed25519 private key codec (0x1300)
 08                  -- varuint, length of comment 
   "test key"        -- 8 octets of UTF-8 comment data
 08                  -- varuint, 8 attributes
   00                -- varuint, AttrId::KeyIsEncrypted
     01              -- varuint, attribute length
-      [01]          -- true, it is encrypted!
+      01            -- true, it is encrypted!
   01                -- varuint, AttrId::KeyData
     30              -- varuint, attribute length (48 octets)
       [48 octets]   -- ciphertext
   02                -- varuint, AttrId::CipherCodec
     02              -- varuint, attribute length
-      [a5 01]       -- varuint, ChaCha20-Poly1305 codec
+      a5 01         -- varuint, ChaCha20-Poly1305 codec
   03                -- varuint, AttrId::CipherKeyLen
     01              -- varuint, attribute length
-      [20]          -- 32 byte key length
+      20            -- 32 byte key length
   04                -- varuint, AttrId::CipherNonce
     08              -- varuint, attribute length
       [8 octets]    -- nonce
   05                -- varuint, AttrId::KdfCodec
     03              -- varuint, attribute length
-      [8d a0 03]    -- varuint, Bcrypt KDF codec
+      8d a0 03      -- varuint, Bcrypt KDF codec
   06                -- varuint, AttrId::KdfSalt
     20              -- varuint, attribute length (32 octets)
       [32 octets]   -- salt
   07                -- varuint, AttrId::KdfRounds
     01              -- varuint, attribute length
-      [0a]          -- varuint, 10 kdf rounds
+      0a            -- varuint, 10 kdf rounds
 ```
 
-In this example the encoding starts off with the multikey sigil (`0x3a`)
+In this example the encoding starts off with the multikey sigil (`0xba24`)
 followed by the varuint codec value for an EdDSA private key (`0x8026`).
 Following that there is the key comment encoded as varbytes with a varuint 
 length value followed by that number of octets of UTF-8 string data; in this 
@@ -256,8 +269,8 @@ the kdf codec, the kdf salt length, the kdf salt, and the kdf rounds.
 This example shows how a Multikey encodes an Es256K public key.
 
 ```
-3a                  -- varuint, multikey sigil 
-[e7 01]             -- varuint, Secp256k1 public key codec
+ba 24               -- varuint, multikey sigil  (0x123a)
+81 26               -- varuint, secp256k1 public key codec (0x1301)
 08                  -- varuint, length of comment
   "test key"        -- 8 octets of UTF-8 comment data
 01                  -- varuint, 1 attribute
@@ -266,9 +279,9 @@ This example shows how a Multikey encodes an Es256K public key.
       [33 octets]   -- key data
 ```
 
-In this example the encoding starts off with the multikey sigil ('0x3a')
-followed by the varuint encoded codec value for an Es256K public key
-(`0xe701`). Following that is 8 octets of UTF-8 comment data and the varuint 
+In this example the encoding starts off with the multikey sigil (`0xba24`)
+followed by the varuint encoded codec value for an secp256k1 public key
+(`0x8126`). Following that is 8 octets of UTF-8 comment data and the varuint 
 encoded number of attributes in the attributes table. In this case there is 
 only one attrbute, the key data itself which is encoded as the varuint 
 encoded `KeyData` attribute ID, followed by the varuint encoded attribute

@@ -91,15 +91,16 @@ specification][8].
 ## [Specification](#specification)
 
 The following diagram shows the overall structure of a VLAD. A VLAD
-is identified by the `0x07` sigil followed by a `nonce` and a `cid`.
+is identified by the `0x1207` sigil followed by a `nonce` and a `cid`. The
+sigil is encoded as a varuint (`0xb724`).
 
 ```
-vlad sigil    cid value
- |              /
- v             v
-0x07 <nonce> <cid>
-        ^
-        |
+vlad sigil     cid value
+ |                /
+ v               v
+0xb724 <nonce> <cid>
+         ^
+         |
     nonce value
 ```
 
@@ -192,9 +193,9 @@ discuss VLADs as identifiers for provenance logs.
 
 To reduce the tight binding and fragility of VLADs, they are encoded using the
 multiformats standard. A VLAD therefore begins with the multicodec sigil
-identifying the data as a VLAD (e.g. `0x07`) followed by two multiformat
-encoded values, a nonce (e.g. `0x3b`) or a multisig (e.g. `0x39`) followed by a
-content addres CID (e.g. `0x01` v1, `0x02` v2, or `0x03` v3).
+identifying the data as a VLAD (e.g. `0x1207`) followed by two multiformat
+encoded values, a nonce (e.g. `0x123b`) or a multisig (e.g. `0x1239`) followed
+by a content addres CID (e.g. `0x01` v1, `0x02` v2, or `0x03` v3).
 
 ### [VLAD Creation](#vlad-creation)
 

@@ -53,30 +53,30 @@ NOT THE OTHER MEMBER HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ## [Introduction](#introduction)
 
 This specification outlines how to encode a very long-lived address (VLAD) in a
-multiformat compatible way. 
+multiformat compatible way.
 
 ### [Current Status](#current-status)
 
-VLADs are fully defined by this specification and meet all of the needs of the 
-current set of use cases. 
+VLADs are fully defined by this specification and meet all of the needs of the
+current set of use cases.
 
 ### [Normative References](#normative-references)
 
-This document refers to `varuint` encoded values throughout. The normative 
+This document refers to `varuint` encoded values throughout. The normative
 reference for which can be found in the [multiformats unsigned-varint
 specification][4].
 
-This document refers to `sigils` the identify a codec or data type. The 
-normative reference for the list of sigils can be found in the [multiformats 
+This document refers to `sigils` the identify a codec or data type. The
+normative reference for the list of sigils can be found in the [multiformats
 multicodecs table][5].
 
 This document refers to `CID` content identifiers. The normative reference for
 which can be found in the [multiformats cid specification][6]
 
-This document refers to `nonce` values. The normative reference for which can 
+This document refers to `nonce` values. The normative reference for which can
 be found in the [multiformats nonce specification][7]
 
-This document refers to `multisig` encoded digital signatures. The normative 
+This document refers to `multisig` encoded digital signatures. The normative
 reference for which can be found in the [multiformats multisig
 specification][8].
 
@@ -92,13 +92,13 @@ specification][8].
 
 The following diagram shows the overall structure of a VLAD. A VLAD
 is identified by the `0x1207` sigil followed by a `nonce` and a `cid`. The
-sigil is encoded as a varuint (`0xb724`).
+sigil is encoded as a varuint (`0x8724`).
 
 ```
 vlad sigil     cid value
  |                /
  v               v
-0xb724 <nonce> <cid>
+0x8724 <nonce> <cid>
          ^
          |
     nonce value
@@ -112,14 +112,14 @@ signed VLAD.
 vlad sigil    cid value
  |              /
  v             v
-0x07 <nonce> <cid>
-        ^
-        |
-    nonce value
+0x8724 <nonce> <cid>
+          ^
+          |
+      nonce value
 
 <nonce> ::= 0x3b <varbytes>
              ^
-            / 
+            /
  nonce sigil
 
 <varbytes> ::= <varuint> <multisig octets>
@@ -145,9 +145,9 @@ socially networked lives.
 Why do we use public keys as identifiers? The answer is that they are a compact
 and convenient value with two primary properties:
 
-1. Public keys have enough entropy that they can be used as identifiers for 
-   a very large number of things. Enough so that there could be a public key 
-   identifying every atom in the known universe and you wouldn't have used 
+1. Public keys have enough entropy that they can be used as identifiers for
+   a very large number of things. Enough so that there could be a public key
+   identifying every atom in the known universe and you wouldn't have used
    event a quarter of the available numbers.
 2. A public key is a cryptographic commitment to a validation function (e.g.
    public key digital signature) that can be used to verify other data and
@@ -211,7 +211,7 @@ by a content addres CID (e.g. `0x01` v1, `0x02` v2, or `0x03` v3).
    CID to the multisig and add the VLAD sigil to the front to create a
    multiformat encoded VLAD value.
 
-[0]: https://cryptid.tech 
+[0]: https://cryptid.tech
 [1]: https://github.com/cryptidtech/provenance-specifications/
 [2]: https://github.com/multiformats/multiformats
 [3]: https://github.com/CommunitySpecification/1.0

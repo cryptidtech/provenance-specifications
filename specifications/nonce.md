@@ -52,23 +52,23 @@ NOT THE OTHER MEMBER HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ## [Introduction](#introduction)
 
 This specification outlines how to encode a nonce value (i.e. Number used ONCE)
-in a multiformats compatible way. Nonces are commonly used in a variety of 
+in a multiformats compatible way. Nonces are commonly used in a variety of
 cryptographic operations.
 
 ### [Current Status](#current-status)
 
 This version of the Nonce specification defines a minimal multiformats
-compatible encoding. It meets the needs of all use cases so far, however feel 
+compatible encoding. It meets the needs of all use cases so far, however feel
 free to file an issue if you have a use case this does not cover.
 
 ### [Normative References](#normative-references)
 
-This document refers to `varuint` encoded values throughout. The normative 
+This document refers to `varuint` encoded values throughout. The normative
 reference for which can be found in the [multiformats unsigned-varint
 specification][4].
 
-This document also refers to `sigils` the identify a codec or data type. The 
-normative reference for the list of sigils can be found in the [multiformats 
+This document also refers to `sigils` the identify a codec or data type. The
+normative reference for the list of sigils can be found in the [multiformats
 multicodecs table][5].
 
 ### [Terms and Definitions](#terms-and-definitions)
@@ -100,8 +100,8 @@ nonce sigil
           count of            variable number
             octets            of octets
 ```
-The Nonce format is designed in such a way that tools only need support for 
-`varuint` and `varbytes` processing to know exactly how many octets are in the 
+The Nonce format is designed in such a way that tools only need support for
+`varuint` and `varbytes` processing to know exactly how many octets are in the
 Nonce object so that it can skip over it if needed.
 
 ## [Examples](#examples)
@@ -127,16 +127,16 @@ bb 24               -- varuint, nonce sigil (0x123b)
     [               -- 73 octets of the Multisig
       b9 24         -- varuint, Multisig sigil (0x1239)
       ed            -- varuint, EdDSA sigil (0xed)
-      [70 octets]   -- 68 octets of Multisig data
+      [70 octets]   -- 70 octets of Multisig data
     ]
 ```
 
-In this example the data inside of the Nonce is a Multisig. The Multisig 
-consists of 72 octets that begins with the `0xb924` Multisig sigil followed by
-the `0xed` Ed25519 codec sigil signifying that this is an EdDSA signature. The 
+In this example the data inside of the Nonce is a Multisig. The Multisig
+consists of 73 octets that begins with the `0xb924` Multisig sigil followed by
+the `0xed` Ed25519 codec sigil signifying that this is an EdDSA signature. The
 remaining 70 octets are the Multisig attributes of the signature.
 
-[0]: https://cryptid.tech 
+[0]: https://cryptid.tech
 [1]: https://github.com/cryptidtech/provenance-specifications/
 [2]: https://github.com/multiformats/multiformats
 [3]: https://github.com/CommunitySpecification/1.0

@@ -117,10 +117,10 @@ vlad sigil    cid value
           |
       nonce value
 
-<nonce> ::= 0x3b <varbytes>
-             ^
-            /
- nonce sigil
+<nonce> ::= 0xbb24 <varbytes>
+               ^
+              /
+       nonce sigil
 
 <varbytes> ::= <varuint> <multisig octets>
                    ^             ^

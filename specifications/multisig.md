@@ -174,7 +174,7 @@ This example shows how a Multisig stores an EdDSA digital signature:
 
 ```
 b9 24               -- varuint, Multisig sigil (0x1239)
-ed                  -- varuint, EdDSA sigil (0xed)
+83 a6 c0 06         -- varuint, EdDSA multisig codec (0xd01303)
 00                  -- varuint, message length (0), detached signature
 01                  -- varuint, number of attributes
   00                -- varuint, AttrId::SigData

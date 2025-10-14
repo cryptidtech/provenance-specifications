@@ -233,8 +233,8 @@ ba 24               -- varuint, multikey sigil (0x123a)
     30              -- varuint, attribute length (48 octets)
       [48 octets]   -- ciphertext
   02                -- varuint, AttrId::CipherCodec
-    02              -- varuint, attribute length
-      a5 01         -- varuint, ChaCha20-Poly1305 codec
+    03              -- varuint, attribute length
+      80 c0 02      -- varuint, ChaCha20-Poly1305 codec (0xa000)
   03                -- varuint, AttrId::CipherKeyLen
     01              -- varuint, attribute length
       20            -- 32 byte key length

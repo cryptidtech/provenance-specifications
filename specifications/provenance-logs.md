@@ -18,6 +18,7 @@ This specification is subject to the [Community Specification License 1.0][3]
 3. [Specification](#specification)
    1. [Features](#features)
    2. [Entry](#entry)
+      1. [Canonical First Entry](#canonical-first-entry)
    3. [Virtual Name Space](#virtual-name-space)
    4. [Hierarchical Keys](#hierarchical-keys)
    5. [Values](#provenance-values)
@@ -137,6 +138,29 @@ the CID for the previous entry, the CID of the lipmaa predecessor,
 the entry's sequence number, the list of mutation operations, the lock
 scripts for validating the next entry, the unlock script used for validating
 this entry and the proof data for validating this entry.
+
+#### [Canonical First Entry](#canonical-first-entry)
+
+The first entry in a provenance log (sequence number 0) MUST establish the
+initial state of the key-value store with the following canonical key-value
+pairs:
+
+| Key-Path | Value | Description |
+|----------|-------|-------------|
+| `/vlad/data` | Binary: first-lock WASM bytes | The WASM validation function binary that is also embedded as the signed message in the VLAD's multisig. This is the data whose hash is verified by the first-lock script. |
+| `/vlad/key` | Binary: advertised public key | The public key of the long-lived advertised key pair. The first-lock script verifies that this key hashes to a value baked into the WASM binary. |
+| `/pubkey` | Binary: advertised public key | The public key used by subsequent lock scripts for signature verification. By convention this is the same as `/vlad/key` at log creation time but may be rotated independently. |
+
+The first-lock script (the lock script baked into the VLAD) verifies the
+first entry by:
+1. Checking that the advertised public key (`/vlad/key`) is the preimage of a
+   hash value embedded in the WASM binary.
+2. Checking a digital signature over the entry using the advertised public key
+   (`/pubkey`).
+
+This ensures that only the holder of the advertised key pair can create the
+first entry for a given VLAD, binding the log to the advertised key pair
+without exposing the ephemeral key used to create the VLAD itself.
 
 ### [Virtual Name Space](#virtual-name-space)
 

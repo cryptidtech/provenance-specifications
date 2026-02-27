@@ -192,16 +192,12 @@ Please file an issue if you have a use case that requires a new attribute type.
 accumulated key shares while gathring enough shares to recreate the key.
 
 **AlgorithmName (0x0c)**
-: An arbitrary string name for the algorithm. This is optional and is intended
-to support arbitrary and/or non-standard key types. Some implementations may
-set this attribute for standard algorithm keys but do not rely upon that.
-Interpretation of the algorithm name is application specific.
+: Reserved for future use — not currently implemented. Intended to support an
+arbitrary string name for the algorithm for non-standard key types.
 
 **KeyType (0x0d)**
-: An arbitrary numeric key type attribute. This is optional and is intended to
-support arbitrary and/or non-standard key types. Some implementations may set
-this attribute for standard algorithm keys but do not rely upon that.
-Interpretation of the key type is application specific.
+: Reserved for future use — not currently implemented. Intended to support an
+arbitrary numeric key type attribute for non-standard key types.
 
 ### [Secret Keys](#secret-keys)
 

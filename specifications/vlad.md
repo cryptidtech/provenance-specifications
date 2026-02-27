@@ -70,12 +70,6 @@ This document refers to `sigils` the identify a codec or data type. The
 normative reference for the list of sigils can be found in the [multiformats
 multicodecs table][5].
 
-This document refers to `CID` content identifiers. The normative reference for
-which can be found in the [multiformats cid specification][6]
-
-This document refers to `nonce` values. The normative reference for which can
-be found in the [multiformats nonce specification][7]
-
 This document refers to `multisig` encoded digital signatures. The normative
 reference for which can be found in the [multiformats multisig
 specification][8].
@@ -91,43 +85,35 @@ specification][8].
 ## [Specification](#specification)
 
 The following diagram shows the overall structure of a VLAD. A VLAD
-is identified by the `0x1207` sigil followed by a `nonce` and a `cid`. The
-sigil is encoded as a varuint (`0x8724`).
+is identified by the `0x1207` sigil followed by a `multisig`. The sigil is
+encoded as a varuint (`0x8724`).
 
 ```
-vlad sigil     cid value
- |                /
- v               v
-0x8724 <nonce> <cid>
-         ^
-         |
-    nonce value
-```
-
-In some cases, the `varbytes` in the `nonce` are a `multisig` encoded digital
-signature over the `cid` value in the VLAD. The following diagram illustrates a
-signed VLAD.
-
-```
-vlad sigil    cid value
+vlad sigil   multisig value
  |              /
  v             v
-0x8724 <nonce> <cid>
-          ^
-          |
-      nonce value
-
-<nonce> ::= 0xbb24 <varbytes>
-               ^
-              /
-       nonce sigil
-
-<varbytes> ::= <varuint> <multisig octets>
-                   ^             ^
-                  /              |
-          count of          variable number
-            octets         of multisig octets
+0x8724 <multisig>
 ```
+
+The `multisig` is a combined digital signature where the signed message is
+embedded within the multisig structure. The message MUST be a valid WebAssembly
+binary (i.e. it starts with the WASM magic bytes `\0asm`). This WASM binary is
+the validation function used to authorize updates to the provenance log
+identified by this VLAD.
+
+```
+<multisig> ::= <multisig sigil> <signature codec> <message> <attributes>
+                      ^                ^               ^          ^
+                     /                /               /          |
+              multisig          algorithm       varbytes     signature
+               sigil             codec        encoded WASM   attributes
+                                              binary (the     (includes
+                                              combined msg)  sig data)
+```
+
+The VLAD is a cryptographic commitment: the digital signature binds the WASM
+validation function to the ephemeral signing key used at creation time. Any
+modification to the WASM code or the signature invalidates the VLAD.
 
 ## [Annex](#annex)
 
@@ -165,51 +151,48 @@ why the web-of-trust isn't anti-fragile.
 Given the two primary properties of public keys listed above, it is conceivable
 that another type of identifer can be constructed with those same properties
 while also lacking the vulnerabilities and limitations to durability over time.
-All we have to do is construct a tuple identifer from a large random value--
-commonly called a `nonce`--and a cryptographic commitment to a validation
-function. By combinding content addressable storage and WASM as universally
-executable code, any WASM code that validates data using cryptography may be
-hashed to create a content address that is both an immutable identifier for
-retrieving the WASM code and also a cryptographic verification method to ensure
-that the WASM code has not been modified and retains its original form down to
-the bit.
+By combining content addressable storage and WASM as universally executable
+code, any WASM code that validates data using cryptography can serve as a
+portable, deterministic validation function. A digital signature over that WASM
+binary creates a cryptographic commitment that binds the validation function to
+a specific creation event without relying on long-lived key material.
 
-Combining the nonce and the content address (e.g. `cid`) of a WASM validation
-function gives us an identifier that is both unique and a cryptographic
-commitment to a validation function; the same set of primary properties as
-public keys. However this new identifer is not based off of key material and is
-not subject to compromise. Any change in the WASM code is detectable and
-produces a different identifier. Any change in the nonce also creates a
-different identifier. The only way for one of these new identifiers to remain
-relevant over time is to remain unchanged.
+A VLAD ("Verifiable Long-lived ADdress") is constructed by digitally signing a
+WASM validation function binary with an ephemeral key pair. The resulting
+`multisig` structure contains both the signature and the signed message (the
+WASM binary) in a combined format. The VLAD sigil is prepended to this multisig
+to form the complete identifier.
 
-This new identifer is called a "Verifiable Long-lived ADdresses" or "VLAD". The
-security of the VLAD can be further enhanced by replacing the 256-bit nonce
-value with a digital signature--preferably an ECDSA/EdDSA signature for
-compactness--over the WASM content address. The resulting signature has the
-same amount of entropy as a random nonce but has the added benefit of allowing
-the creator of the VLAD to prove they created it. More on this later when we
-discuss VLADs as identifiers for provenance logs.
+This construction has the same two primary properties as public keys:
 
-To reduce the tight binding and fragility of VLADs, they are encoded using the
-multiformats standard. A VLAD therefore begins with the multicodec sigil
-identifying the data as a VLAD (e.g. `0x1207`) followed by two multiformat
-encoded values, a nonce (e.g. `0x123b`) or a multisig (e.g. `0x1239`) followed
-by a content addres CID (e.g. `0x01` v1, `0x02` v2, or `0x03` v3).
+1. The signature provides sufficient entropy to serve as a globally unique
+   identifier.
+2. The embedded WASM binary is a cryptographic commitment to a validation
+   function that can be used to verify provenance log operations.
+
+However, unlike a public key identifier, a VLAD is not based on long-lived key
+material and is not subject to compromise. The ephemeral key pair used to sign
+the VLAD is discarded after creation. Any modification to the WASM code or the
+signature invalidates the VLAD. The only way for a VLAD to remain relevant over
+time is to remain unchanged.
+
+To reduce tight binding and fragility, VLADs are encoded using the multiformats
+standard. A VLAD begins with the multicodec sigil identifying the data as a
+VLAD (e.g. `0x1207`) followed by a multisig (e.g. `0x1239`) encoded digital
+signature containing the WASM validation function as the signed message.
 
 ### [VLAD Creation](#vlad-creation)
 
-1. Select the WASM validation function they would like to use for validating
-   PUT operations in the global DHT for updating the mutable forward pointer.
-   There is likely to be a small well-known set of WASM validation functions
-   used. The CID of the chosen WASM is the value used in provenance log
-   creation.
-2. Generate an ephemeral cryptographic public key pair.
-3. Digitally sign the CID of the WASM code to create the random value for the
-   VLAD.
-4. Encode the digital signature in the multisig multiformat, concatenate the
-   CID to the multisig and add the VLAD sigil to the front to create a
-   multiformat encoded VLAD value.
+1. Select the WASM validation function to use for validating PUT operations in
+   the global DHT for updating the mutable forward pointer. There is likely to
+   be a small well-known set of WASM validation functions used.
+2. Generate an ephemeral cryptographic key pair (e.g. Ed25519).
+3. Digitally sign the WASM binary with the ephemeral key to produce a combined
+   multisig (i.e. the WASM binary is embedded as the signed message within the
+   multisig structure).
+4. Prepend the VLAD sigil to the multisig to create the multiformat encoded
+   VLAD value.
+5. Discard the ephemeral key pair. It is not needed after VLAD creation.
 
 [0]: https://cryptid.tech
 [1]: https://github.com/cryptidtech/provenance-specifications/
@@ -217,6 +200,4 @@ by a content addres CID (e.g. `0x01` v1, `0x02` v2, or `0x03` v3).
 [3]: https://github.com/CommunitySpecification/1.0
 [4]: https://github.com/multiformats/unsigned-varint/blob/master/README.md
 [5]: https://github.com/multiformats/multicodecs/blob/master/table.csv
-[6]: https://github.com/multiformats/cid/blob/master/README.md
-[7]: https://github.com/cryptidtech/provenance-specifications/blob/main/specifications/nonce.md
 [8]: https://github.com/cryptidtech/provenance-specifications/blob/main/specifications/multisig.md

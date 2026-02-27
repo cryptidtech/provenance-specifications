@@ -64,27 +64,7 @@ All WACC API functions are imported from the "wacc" module and prefixed with und
   (i32.const 7))   ;; length of "/pubkey"
 ```
 
-### 2. _pop
-
-**Signature:**
-```wasm
-(import "wacc" "_pop" (func $pop (result i32)))
-```
-
-**Parameters:** None
-
-**Returns:**
-- i32: 1 on success, 0 on failure
-
-**Operation:**
-1. Removes top value from parameter stack
-2. Discards the value
-3. Returns success/failure
-
-**Errors:**
-- Empty parameter stack
-
-### 3. _check_eq
+### 2. _check_eq
 
 **Signature:**
 ```wasm
@@ -112,7 +92,7 @@ All WACC API functions are imported from the "wacc" module and prefixed with und
 - Type mismatch
 - Maximum check count exceeded
 
-### 4. _check_preimage
+### 3. _check_preimage
 
 **Signature:**
 ```wasm
@@ -148,7 +128,7 @@ All WACC API functions are imported from the "wacc" module and prefixed with und
 - Only whitelisted hash algorithms are accepted
 - Weak algorithms (MD5, SHA-1) are rejected
 
-### 5. _check_signature
+### 4. _check_signature
 
 **Signature:**
 ```wasm
@@ -187,7 +167,7 @@ All WACC API functions are imported from the "wacc" module and prefixed with und
 - Only whitelisted signature algorithms accepted
 - Supports Ed25519, secp256k1, P-256, BLS12-381
 
-### 6. _branch
+### 5. _branch
 
 **Signature:**
 ```wasm
@@ -216,7 +196,7 @@ All WACC API functions are imported from the "wacc" module and prefixed with und
 **Usage:**
 Used to create hierarchical key paths like `/root/child/key`.
 
-### 7. _log
+### 6. _log
 
 **Signature:**
 ```wasm
@@ -242,7 +222,7 @@ Used to create hierarchical key paths like `/root/child/key`.
 **Usage:**
 Debug and audit logging from WASM scripts.
 
-### 8. _push_value
+### 7. _push_value
 
 **Signature:**
 ```wasm
@@ -276,7 +256,7 @@ Used by unlock scripts to push raw byte data (such as a public key or preimage) 
   (i32.const 32))  ;; length of bytes
 ```
 
-### 9. _check_preimage_value
+### 8. _check_preimage_value
 
 **Signature:**
 ```wasm
@@ -372,7 +352,7 @@ Values on stacks can be:
 ### Algorithm Whitelisting
 
 **Allowed Hash Algorithms:**
-- SHA-2: sha2-256 (0x12), sha2-512 (0x13), sha2-384 (0x20), sha2-224 (0x1013)
+- SHA-2: sha2-256 (0x12), sha2-512 (0x13), sha2-384 (0x20)
 - SHA-3: sha3-256 (0x16), sha3-512 (0x14), sha3-384 (0x15), sha3-224 (0x17)
 - Keccak: keccak-256 (0x1b), keccak-512 (0x1d), keccak-384 (0x1c), keccak-224 (0x1a)
 - Blake: blake3 (0x1e), blake2b-256 (0xb220), blake2b-512 (0xb240), blake2s-256 (0xb260)
@@ -514,7 +494,7 @@ Multiple instances can run in parallel, each with:
 ## Conformance
 
 A conforming WACC VM implementation MUST:
-1. Implement all 9 API functions with specified signatures
+1. Implement all 8 API functions with specified signatures
 2. Enforce security limits (fuel, checks, memory, log)
 3. Reject weak cryptographic algorithms
 4. Validate all inputs (keys, paths, memory operations)

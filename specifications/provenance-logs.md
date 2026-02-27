@@ -137,7 +137,8 @@ Each entry contains the entry's version, the VLAD identifier,
 the CID for the previous entry, the CID of the lipmaa predecessor,
 the entry's sequence number, the list of mutation operations, the lock
 scripts for validating the next entry, the unlock script used for validating
-this entry and the proof data for validating this entry.
+this entry and the named proofs data (`proofs: BTreeMap<String, Vec<u8>>`) for
+validating this entry.
 
 #### [Canonical First Entry](#canonical-first-entry)
 
@@ -149,14 +150,18 @@ pairs:
 |----------|-------|-------------|
 | `/vlad/data` | Binary: first-lock WASM bytes | The WASM validation function binary that is also embedded as the signed message in the VLAD's multisig. This is the data whose hash is verified by the first-lock script. |
 | `/vlad/key` | Binary: advertised public key | The public key of the long-lived advertised key pair. The first-lock script verifies that this key hashes to a value baked into the WASM binary. |
-| `/pubkey` | Binary: advertised public key | The public key used by subsequent lock scripts for signature verification. By convention this is the same as `/vlad/key` at log creation time but may be rotated independently. |
+| `/keys/primary` | Binary: primary public key | The primary public key used by subsequent lock scripts for signature verification. By convention this is the same as `/vlad/key` at log creation time but may be rotated independently. |
+| `/keys/recovery` | Binary: recovery public key | The recovery public key used for higher-precedence recovery operations. Lock scripts check this key first (check_count=0), giving recovery key signatures precedence over primary key signatures. |
+| `/proofs/primary` | Binary: primary signature | The digital signature over the entry created with the primary key pair. |
+| `/proofs/recovery` | Binary: recovery signature | The digital signature over the entry created with the recovery key pair (when present). |
+| `/peerid` | Binary: peer identifier | The peer identifier associated with this log. |
 
 The first-lock script (the lock script baked into the VLAD) verifies the
 first entry by:
 1. Checking that the advertised public key (`/vlad/key`) is the preimage of a
    hash value embedded in the WASM binary.
-2. Checking a digital signature over the entry using the advertised public key
-   (`/pubkey`).
+2. Checking a digital signature over the entry using the primary public key
+   (`/keys/primary`).
 
 This ensures that only the holder of the advertised key pair can create the
 first entry for a given VLAD, binding the log to the advertised key pair
@@ -257,7 +262,7 @@ It is critical to the security of the log that the validation of each entry be
 done following a very specific order of operations:
 
 1. Create two empty key-value stores.
-2. Load the proposed entry fields (e.g. seqno, vlad, proof, etc) into one
+2. Load the proposed entry fields (e.g. seqno, vlad, proofs, etc) into one
    key-value store to establish the proposed state. DO NOT apply the `ops`
    mutations from the proposed entry.
 3. Load the unlock script from the proposed entry and execute it to initialize
@@ -278,8 +283,10 @@ The following functions are available for use in lock and unlock scripts:
 **push(<key-path>)**
 : Pushes the value associated with the key-path onto the parameter stack.
 
-**pop()**
-: Pops the top value off of the parameter stack.
+**push_value(<raw-bytes>)**
+: Pushes raw byte data directly from WASM memory onto the parameter stack,
+without requiring a key-value store lookup. This is the counterpart to `push`
+which reads from the current state store.
 
 **branch(<key-path>)**
 : Concatenates the branch key-path with the provided key-path to create a
@@ -300,12 +307,26 @@ one parameter off of the parameter stack if it succeeds. This function
 understands the [Multihash][10] format and is able to generate and
 verify preimages using any hash function it supports.
 
-**check_signature(<key-path>)**
-: Verifies the digital signature and message on the parameter stack using the
-public key associated with the key-path; increments the check counter if it
-fails. Pops two parameters off of the parameter stack if it succeeds. This
-function understands the [Multikey][7] and [Multisig][6]
-formats and is able to verify any digital signature they support.
+**check_preimage_value()**
+: Pops the expected hash (as a multihash) and the preimage data from the
+parameter stack, then verifies that the preimage hashes to the expected value.
+Unlike `check_preimage`, both values come entirely from the stack rather than
+looking up the expected hash from the current state store. This is useful for
+the first-lock script which verifies that the advertised public key hashes to
+the value baked into the WASM binary.
+
+**check_signature(<key-path>, <msg-path>)**
+: Verifies the digital signature on the parameter stack using the public key
+associated with the key-path and the message associated with the msg-path;
+increments the check counter if it fails. Pops the signature off of the
+parameter stack if it succeeds. The public key is read from the current state
+and the message is read from the proposed state. This function understands the
+[Multikey][7] and [Multisig][6] formats and is able to verify any digital
+signature they support.
+
+**log(<message>)**
+: Appends a debug/audit message to the VM log buffer. This is used for
+debugging and auditing script execution.
 
 ### [Unlock Scripts](#unlock-scripts)
 
@@ -321,16 +342,17 @@ proposed entry like so:
 
 ```
 ─┬─"/"
- ╰─┬─ "entry/"
-   ╰─┬─ "version"
-     ├─ "vlad"
-     ├─ "prev"
-     ├─ "lipmaa"
-     ├─ "seqno"
-     ├─ "ops"
-     ├─ "locks"
-     ├─ "unlock"
-     ╰─ "proof"
+ ├─┬─ "entry/"
+ │ ╰─┬─ "version"
+ │   ├─ "vlad"
+ │   ├─ "prev"
+ │   ├─ "lipmaa"
+ │   ├─ "seqno"
+ │   ├─ "ops"
+ │   ├─ "locks"
+ │   ╰─ "unlock"
+ ╰─┬─ "proofs/"
+   ╰─── <name>       (e.g. "primary", "recovery")
 ```
 
 An example unlock script for satisfying a `check_signature` lock script looks
@@ -339,11 +361,8 @@ like:
 ```rust
 #[no_mangle]
 pub fn for_great_justice() {
-    // push the serialized Entry as the message
-    push("/entry/");
-
-    // push the proof data
-    push("/entry/proof");
+    // push the proof signature from the named proofs map
+    push("/proofs/primary");
 }
 ```
 
@@ -351,20 +370,15 @@ or in web assembly text:
 
 ```wat
 (module
-  ;; the imported _check_signature function
+  ;; the imported _push function
   (import "wacc" "_push" (func $push (param i32 i32) (result i32)))
 
   ;; the exported "for_great_justice" function to call
   (func $main (export "for_great_justice") (param) (result i32)
-    ;; push("/entry/")
-    i32.const 0 
-    i32.const 7
+    ;; push("/proofs/primary")
+    i32.const 0
+    i32.const 16
     call $push
-
-    ;; push("/entry/proof")
-    i32.const 7
-    i32.const 12
-    call $push 
 
     return
   )
@@ -372,21 +386,18 @@ or in web assembly text:
   ;; define the memory to store the string constants in
   (memory (export "memory") 1)
 
-  ;; string constant to pass to check_signature
-  (data (i32.const 0) "/entry/")
-  (data (i32.const 7) "/entry/proof")
+  ;; string constant for the named proof path
+  (data (i32.const 0) "/proofs/primary")
 )
 ```
 
-In the example given above, the unlock script pushes the value associated with
-the `"/entry/"` key-path which is the compact serialized form of the proposed
-entry with a NULL `"/entry/proof"` value. In essence, the value associated with
-`"/entry/"` is the serialized entry object that was digitally signed; it is the
-message associated with the digital signature associated with the
-`"/entry/proof"` key-path. NOTE: this assumes a detached signature but it is
-also possible to use a combined signature that contains the signed data,
-eliminating the need to push the `"/entry/"` value however this unnecessarily
-duplicates data.
+In the example given above, the unlock script pushes the digital signature
+from the named proofs map at `"/proofs/primary"` onto the parameter stack.
+The lock script's `check_signature(key_path, msg_path)` call reads the
+verification key from the current state at `key_path` and the message from
+the proposed state at `msg_path` (typically `"/entry/"`, the serialized
+entry with proofs cleared). NOTE: this assumes a detached signature but it is
+also possible to use a combined signature that contains the signed data.
 
 ### [Lock Scripts](#lock-scripts)
 
@@ -471,8 +482,9 @@ which order. Assume you have a key-path structure like the following:
 
 ```
 ─┬─ "/"
- ╰─┬─ "tpubkey"
-   ├─ "pubkey"
+ ╰─┬─ "keys/"
+   │ ├─── "primary"
+   │ ╰─── "recovery"
    ├─ "hash"
    ╰─┬─ "delegated/"
      ├─┬─ "mike/"
@@ -524,7 +536,9 @@ Assume that applying the mutation ops from foot (i.e. first event) to head
 
 ```
 ─┬─ "/"
- ╰─── "pubkey"
+ ╰─┬─ "keys/"
+   ├─── "primary"
+   ╰─── "recovery"
 ```
 
 A lock script may reference the value of the public key like so:
@@ -532,8 +546,8 @@ A lock script may reference the value of the public key like so:
 ```rust
 #[no_mangle]
 pub fn move_every_zig() -> bool {
-    // check the signature using the data on the stack and the pubkey
-    check_signature("/pubkey")
+    // check the signature using the key and message paths
+    check_signature("/keys/primary", "/entry/")
 }
 ```
 
@@ -541,53 +555,54 @@ or in web assembly text:
 
 ```wat
 (module
-  ;; the imported _check_signature function
-  (import "wacc" "_check_signature" (func $check_signature (param i32 i32) (result i32)))
+  ;; the imported _check_signature function (key_ptr, key_len, msg_ptr, msg_len)
+  (import "wacc" "_check_signature" (func $check_signature (param i32 i32 i32 i32) (result i32)))
 
   ;; the exported "move_every_zig" function to call
   (func $main (export "move_every_zig") (param) (result i32)
-    i32.const 0 
-    i32.const 7 
-    call $check_signature 
+    i32.const 0
+    i32.const 13
+    i32.const 13
+    i32.const 7
+    call $check_signature
     return
   )
 
   ;; define the memory to store the string constants in
   (memory (export "memory") 1)
 
-  ;; string constant to pass to check_signature
-  (data (i32.const 0) "/pubkey")
+  ;; string constants to pass to check_signature
+  (data (i32.const 0) "/keys/primary")
+  (data (i32.const 13) "/entry/")
 )
 ```
 
 Since lock scripts are associated with a key-path which specifies when/if it is
 executed, the above lock script will always reference the public key associated
-with the `"/pubkey"` key-path regardless of which key-path it is associated
+with the `"/keys/primary"` key-path regardless of which key-path it is associated
 with because it uses an absolute key-path. The above lock script could also be
 rewritten to the following:
 
 ```rust
 #[no_mangle]
 pub fn move_every_zig() -> bool {
-    // check the signature using the pubkey in the branch context 
-    check_signature(branch("pubkey"))
+    // check the signature using the key in the branch context
+    check_signature(branch("keys/primary"), "/entry/")
 }
 ```
 
 This lock script could be associated with the `"/"` key-path or any other
 key-path such as `"/foo/"`. In the latter case, the call to `check_signature`
-would be passed the key-path `/foo/pubkey`. This is handy for use in delegation
-which is explained further down in this document.
+would be passed the key-path `/foo/keys/primary`. This is handy for use in
+delegation which is explained further down in this document.
 
 The lock script above executes the `check_signature` function passing it the
-key-path referencing the public key to use. The function first peeks at the
-value on top of the stack to see if there is a [Multisig][6] encoded
-digital signature on the top of the stack and checks that it is the same kind
-of signature as the public key. If those match, then the function expects the
-stack to have the digital signature on top with the message just below that. It
-checks the signature, and if it is valid, it pops both the signature and
-message off of the parameter stack and it pushes the `SUCCESS` marker onto the
-return stack.
+key-path referencing the public key to use and the message path. The function
+reads the [Multikey][7] public key from the current state at the key-path,
+reads the message from the proposed state at the msg-path, and peeks at the
+[Multisig][6] encoded digital signature on top of the parameter stack. It
+checks the signature, and if it is valid, it pops the signature off of the
+parameter stack and pushes the `SUCCESS` marker onto the return stack.
 
 Lock scripts may themselves have multiple checks that are combined with logical
 "and" and "or" operations. In those cases, precedence is established by the
@@ -597,16 +612,16 @@ satisfy the same lock script, the one with the _lowest_ check counter value
 takes precedence.
 
 Below is an example of the use of "and" and "or" predicates to construct a lock
-script that enforces the proposed entry proof is either a valid threshold
-signature or pubkey signature or preimage proof.
+script that enforces the proposed entry proof is either a valid recovery key
+signature, primary key signature, or preimage proof.
 
 ```rust
 #[no_mangle]
 pub fn move_every_zig() -> bool {
-    // then check a possible threshold sig...
-    check_signature("/tpubkey") ||   // check_count++
-    // then check a possible pubkey sig...
-    check_signature("/pubkey") || // check_count++
+    // then check a possible recovery key sig...
+    check_signature("/keys/recovery", "/entry/") ||   // check_count++
+    // then check a possible primary key sig...
+    check_signature("/keys/primary", "/entry/") || // check_count++
     // then the pre-image proof...
     check_preimage("/hash")
 }
@@ -620,18 +635,24 @@ counter value is pushed onto the stack as the payload of the
 
 Because logical operations in Rust short circuit, in the example lock script
 above, the only time the `check_preimage` function will execute is if the
-`check_signature("/pubkey")` fails. The only time the
-`check_signature("/pubkey")` function will execute is if the
-`check_signature("/tpubkey")` function fails. If either `check_signature`
-functions fail, their only side effect is to increment the check counter. Then
-if the `check_preimage` succeeds, the marker left on the stack will be
-`SUCCESS(2)`. If the `check_signature("/pubkey")` succeeds, the marker left on
-the stack will be `SUCCESS(1)`. If the `check_signature("/tpubkey")` succeeds,
-the marker left on the stack will be `SUCCESS(0)`. If there are two competing
-entries and one provides a valid signature and the other provides a valid
-preimage, the one with the valid signature takes precedence over the one with
-the valid preimage because the check counter is lower for the entry with the
-valid signature.
+`check_signature("/keys/primary", "/entry/")` fails. The only time the
+`check_signature("/keys/primary", "/entry/")` function will execute is if the
+`check_signature("/keys/recovery", "/entry/")` function fails. If either
+`check_signature` functions fail, their only side effect is to increment the
+check counter. Then if the `check_preimage` succeeds, the marker left on the
+stack will be `SUCCESS(2)`. If the `check_signature("/keys/primary", "/entry/")`
+succeeds, the marker left on the stack will be `SUCCESS(1)`. If the
+`check_signature("/keys/recovery", "/entry/")` succeeds, the marker left on the
+stack will be `SUCCESS(0)`. If there are two competing entries and one provides
+a valid signature and the other provides a valid preimage, the one with the
+valid signature takes precedence over the one with the valid preimage because
+the check counter is lower for the entry with the valid signature.
+
+Recovery key signatures (check_count=0) take precedence over primary key
+signatures (check_count=1), which in turn take precedence over preimage proofs
+(check_count=2). This hierarchy enables forced recovery: if a primary key is
+compromised, the recovery key holder can create a competing entry that takes
+precedence.
 
 In the case where competing entries satisfy the same lock script with the same
 check count, the entry with the context key-path closest to the `"/"` branch
@@ -653,15 +674,18 @@ In the example from above, let us assume we have the following:
 
 ```
 ─┬─ "/"
- ╰─┬─ "tpubkey"
-   ├─ "pubkey"
+ ╰─┬─ "keys/"
+   │ ├─── "primary"
+   │ ╰─── "recovery"
    ├─ "hash"
    ╰─┬─ "delegated/"
      ├─┬─ "mike/"
-     │ ├─── "pubkey"
+     │ ├─┬─ "keys/"
+     │ │ ╰─── "primary"
      │ ╰─── "endpoint"
      ╰─┬─ "walker/"
-       ├─── "pubkey"
+       ├─┬─ "keys/"
+       │ ╰─── "primary"
        ╰─── "peerid"
 
 ```
@@ -682,7 +706,7 @@ govern all of the `"/delegated/"` branch:
 ```rust
 #[no_mangle]
 fn lock() -> bool {
-    check_signature(branch("pubkey"))
+    check_signature(branch("keys/primary"), "/entry/")
 }
 ```
 
@@ -702,12 +726,12 @@ his entry that validates with the `"/"` lock script. After that fails, the lock
 script for the `"/delegated/"` branch executes with the `"/delegated/mike/"`
 branch context. If Mike's proposed entry is digitally signed with the secret
 key that is associated with the public key value stored under
-`"/delegated/mike/pubkey"` then the entry validates and is accepted.
+`"/delegated/mike/keys/primary"` then the entry validates and is accepted.
 
 If Walker wanted to update the value associated with
 `"/delegated/walker/peerid"` then he would also create a new proposed event and
 digitally sign it with the key pair associated with the public key stored under
-`"/delegate/walker/pubkey"` and the same `"/delegated/"` lock script works for
+`"/delegated/walker/keys/primary"` and the same `"/delegated/"` lock script works for
 him because the context branch for validating his event is
 `"/delegated/walker/"`.
 
@@ -782,11 +806,11 @@ key-path:
 ```rust
 #[no_mangle]
 pub fn move_every_zig() -> bool {
-    // forking the parent be done by whomever can sign with "/forks/pubkey"
-    check_signature(branch("pubkey")) ||
+    // forking the parent be done by whomever can sign with "/forks/keys/primary"
+    check_signature(branch("keys/primary"), "/entry/") ||
 
-    // check the validity of the first entry of the child log 
-    (check_eq(branch("vlad")) && check_signature(branch("pubkey")))
+    // check the validity of the first entry of the child log
+    (check_eq(branch("vlad")) && check_signature(branch("keys/primary"), "/entry/"))
 }
 ```
 
@@ -795,9 +819,9 @@ recording the information about the child log in the parent log and the
 second step is publishing the child log. By convention, each child log's
 information is stored under its own branch under `"/forks/"`. The child's
 branch name is arbitrary but, again by convention, under its branch there is a
-`"vlad"` leaf with the child's VLAD, a `"pubkey"` leaf with the child's first
-advertised pubkey that was also used to sign its first entry and the CID in its
-VLAD.
+`"vlad"` leaf with the child's VLAD, a `"keys/primary"` leaf with the child's
+first advertised public key that was also used to sign its first entry and the
+CID in its VLAD.
 
 When creating a child log fork, we create a new entry in the parent log with
 the following mutation `op` values:
@@ -806,15 +830,15 @@ the following mutation `op` values:
 "ops": [
     { "noop": [ "/forks/" ] },
     { "update": [ "/forks/child1/vlad", { "bin": [ <binary child VLAD data> ] } ] },
-    { "update": [ "/forks/child1/pubkey", { "bin": [ <binary child multikey pubkey data> ] } ] },
+    { "update": [ "/forks/child1/keys/primary", { "bin": [ <binary child multikey pubkey data> ] } ] },
 ]
 ```
 
-This new entry is signed using the key pair associated with `"/forks/pubkey"`.
-The `noop` mutation is used to set the context key-path to `"/forks/"` by
-including it the `op` mutation set of key-paths. It is the longest common
-key-path and thus becomes the context key-path for the `branch` function when
-running it to validate the new event in the parent log.
+This new entry is signed using the key pair associated with
+`"/forks/keys/primary"`. The `noop` mutation is used to set the context
+key-path to `"/forks/"` by including it the `op` mutation set of key-paths. It
+is the longest common key-path and thus becomes the context key-path for the
+`branch` function when running it to validate the new event in the parent log.
 
 When the lock script associated with `"/forks/"` executes, the first
 `check_signature` call passes and the lock script exits with `SUCCESS(0)` on
@@ -828,13 +852,13 @@ include an `op` mutation to record the parent VLAD in the
 ```json
 "ops": [
     { "update": [ "/forks/child1/parent", { "bin": [ <binary parent VLAD data> ] } ] },
-    { "update": [ "/forks/child1/pubkey", { "bin": [ <binary child VLAD pubkey> ] } ] },
+    { "update": [ "/forks/child1/keys/primary", { "bin": [ <binary child VLAD pubkey> ] } ] },
 ]
 ```
 
-The additional `"/forks/child1/pubkey"` in the child log records the signing
-key in the child in such a way that it doesn't disrupt the delegation and
-forking lock script execution but allows for the child log to have its own
+The additional `"/forks/child1/keys/primary"` in the child log records the
+signing key in the child in such a way that it doesn't disrupt the delegation
+and forking lock script execution but allows for the child log to have its own
 lock scripts and validate the next entry in the log. The only rule is that the
 child's initial entry can only have `op` mutations under the `"/forks/child1/"`
 key-path to ensure that the lock script from the parent executes correctly and
@@ -846,11 +870,8 @@ following:
 ```rust
 #[no_mangle]
 pub fn unlock() {
-    // push the entry values
-    push("/entry/");
-
-    // push the signature created using the /forks/child1/pubkey keypair
-    push("/entry/proof");
+    // push the signature created using the /forks/child1/keys/primary keypair
+    push("/proofs/primary");
 
     // push the vlad
     push("/entry/vlad");
@@ -858,41 +879,41 @@ pub fn unlock() {
 ```
 
 When validating the first entry in the first child log, the unlock script
-pushes the serialized entry, the ephemeral signature over the entry as well as
-the log's VLAD value. This puts the parameter stack into the following state:
+pushes the digital signature and the log's VLAD value onto the parameter stack.
+This puts the parameter stack into the following state:
 
 ```
-      ┌──────────────────┐
-top → │ <"/entry/vlad">  │ ← child vlad
-      ├──────────────────┤
-      │ <"/entry/proof"> │ ← digital signature
-      ├──────────────────┤
-      │ <"/entry/">      │ ← signed message
-      ├──────────────────┤
-      │        ┆         │
-      ┆                  ┆
+      ┌──────────────────────┐
+top → │ <"/entry/vlad">      │ ← child vlad
+      ├──────────────────────┤
+      │ <"/proofs/primary">  │ ← digital signature
+      ├──────────────────────┤
+      │          ┆           │
+      ┆                      ┆
 ```
 
 The first entry of the child log must be signed using the key pair associated
-with the pubkey recorded in the parent log under the `"/forks/child1/pubkey"`
-leaf. When the first entry is validated, the lock script from the parent
-associated with the parent's `"/forks/"` key-path will execute because the
-first entry in the child log only mutates key-paths under `"/forks/"`. The
-context path this time will be `"/forks/child1/"` since that is the longest
-common branch key-path in the `op` mutation set in the child's first entry.
+with the pubkey recorded in the parent log under the
+`"/forks/child1/keys/primary"` leaf. When the first entry is validated, the
+lock script from the parent associated with the parent's `"/forks/"` key-path
+will execute because the first entry in the child log only mutates key-paths
+under `"/forks/"`. The context path this time will be `"/forks/child1/"` since
+that is the longest common branch key-path in the `op` mutation set in the
+child's first entry.
 
 When the parent log entry's lock script executes, the following steps are
 executed:
 
-1. The `check_signature(branch("pubkey"))` fails because it sees a VLAD on top
-   of the stack and not a signature.
+1. The `check_signature(branch("keys/primary"), "/entry/")` fails because it
+   sees a VLAD on top of the stack and not a signature.
 2. The `check_eq(branch("vlad"))` succeeds because the `<"/forks/child1/vlad">`
    value in the parent matches the "VLAD" value pushed on the stack by the
    child unlock script. It pops the VLAD parameter off of the parameter stack.
-3. The `check_signature(branch("pubkey"))` succeeds because the
-   `<"/forks/child1/pubkey">` public key in the parent validates the signature
-   `<"/entry/proof">` and message `<"/entry/">` values pushed on the stack by the
-   child unlock script. It pops both off of the parameter stack.
+3. The `check_signature(branch("keys/primary"), "/entry/")` succeeds because the
+   `<"/forks/child1/keys/primary">` public key in the parent validates the
+   signature `<"/proofs/primary">` on the stack using the message from the
+   proposed state at `"/entry/"`. It pops the signature off of the parameter
+   stack.
 4. A `SUCCESS(1)` marker is pushed onto the results stack because the initial
    `check_signature` function failed, incrementing the check counter once.
 

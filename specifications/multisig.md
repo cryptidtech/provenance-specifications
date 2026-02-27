@@ -161,10 +161,8 @@ Multikey, are required to verify the validity of a Multisig signature.
 accumulate threshold signature shares.
 
 **AlgorithmName (0x07)**
-: An arbitrary string name for the algorithm. This is optional and is intended
-to support arbitrary and/or non-standard signature types. Some implementations
-may set this attribute for standard algorithm signatures but do not rely upon
-that. Interpretation of the algorithm name is application specific.
+: Reserved for future use — not currently implemented. Intended to support an
+arbitrary string name for the algorithm for non-standard signature types.
 
 ## [Examples](#examples)
 

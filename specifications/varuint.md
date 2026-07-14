@@ -210,14 +210,14 @@ are encoded as varuints:
 ```
 Sigil Value    Sigil Name           Varuint Encoding
 -----------    ---------------      ----------------
-0xed           EdDSA                0xed
-0x123a         Multikey             0xba 0x24
+0xed           Ed25519 public key   ed 01
+0x123a         Multi-Key            0xba 0x24
 0x123b         Nonce                0xbb 0x24
-0x1239         Multisig             0xb9 0x24
+0x1239         Multi-Sig            0xb9 0x24
 0x1207         VLAD                 0x87 0x24
 0x1300         Ed25519 priv key     0x80 0x26
-0x1301         secp256k1 pub key    0x81 0x26
-0xd01304       Bls12381G1SigShare   0x84 0xa6 0xc0 0x06
+0x1301         secp256k1 priv key   0x81 0x26
+0xd01304       Bls12381G1ShareMsig  0x84 0xa6 0xc0 0x06
 
 Example: Encoding sigil 0x123b (Nonce = 4667 decimal):
   4667 = 0x123b

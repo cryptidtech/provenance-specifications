@@ -18,7 +18,7 @@ This specification is subject to the [Community Specification License 1.0][3].
 3. [Specification](#specification)
 4. [Examples](#examples)
     1. [A Nonce with Random Data](#a-nonce-with-random-data)
-    2. [A Nonce with Multisig Data](#a-nonce-with-multisig-data)
+    2. [A Nonce with Multi-Sig Data](#a-nonce-with-multi-sig-data)
 
 ## [Foreword](#foreword)
 
@@ -116,25 +116,25 @@ bb 24               -- varuint, nonce sigil
     [32 octets]     -- 32 octets of random data
 ```
 
-### [A Nonce with Multisig Data](#a-nonce-with-multisig-data)
+### [A Nonce with Multi-Sig Data](#a-nonce-with-multi-sig-data)
 
-This example shows how a Nonce containing an EdDSA [Multisig][6]—as used in some
+This example shows how a Nonce containing an EdDSA [Multi-Sig][6]—as used in some
 [VLADs][7]—is encoded:
 
 ```
 bb 24               -- varuint, nonce sigil (0x123b)
   49                -- varuint, length of nonce data
-    [               -- 73 octets of the Multisig
-      b9 24         -- varuint, Multisig sigil (0x1239)
-      83 a6 c0 06   -- varuint, EdDSA multisig codec (0xd01303)
-      [66 octets]   -- 66 octets of Multisig data
+    [               -- 73 octets of the Multi-Sig
+      b9 24         -- varuint, multi-sig sigil (0x1239)
+      83 a6 c0 06   -- varuint, EddsaMsig codec (0xd01303)
+      [67 octets]   -- 67 octets of Multi-Sig data
     ]
 ```
 
-In this example the data inside of the Nonce is a Multisig. The Multisig
-consists of 73 octets that begins with the `0xb924` Multisig sigil followed by
-the `0x83a6c006` EdDSA multisig codec signifying that this is an EdDSA signature. The
-remaining 66 octets are the Multisig message and attributes of the signature.
+In this example the data inside of the Nonce is a Multi-Sig. The Multi-Sig
+consists of 73 octets that begins with the `0xb924` Multi-Sig sigil followed by
+the `0x83a6c006` EddsaMsig codec signifying that this is an EdDSA signature. The
+remaining 67 octets are the Multi-Sig message and attributes of the signature.
 
 [0]: https://cryptid.tech
 [1]: https://github.com/cryptidtech/provenance-specifications/
@@ -142,5 +142,5 @@ remaining 66 octets are the Multisig message and attributes of the signature.
 [3]: https://github.com/CommunitySpecification/1.0
 [4]: https://github.com/multiformats/unsigned-varint/blob/master/README.md
 [5]: https://github.com/multiformats/multicodecs/blob/master/table.csv
-[6]: https://github.com/cryptidtech/provenance-specifications/blob/main/specifications/multisig.md
+[6]: https://github.com/cryptidtech/provenance-specifications/blob/main/specifications/multi-sig.md
 [7]: https://github.com/cryptidtech/provenance-specifications/blob/main/specifications/vlad.md

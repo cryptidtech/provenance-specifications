@@ -77,12 +77,12 @@ use cases please file a proposal as an issue in this repository.
 This document refers to `nonce` values. The normative reference for which can
 be found in the [multiformats nonce specification][5]
 
-This document refers to `multisig` encoded digital signatures. The normative
-reference for which can be found in the [multiformats multisig
+This document refers to `multi-sig` encoded digital signatures. The normative
+reference for which can be found in the [multiformats multi-sig
 specification][6].
 
-This document refers to `multikey` encoded cryptography keys. The normative
-reference for which can be found in the [multiformats multikey
+This document refers to `multi-key` encoded cryptography keys. The normative
+reference for which can be found in the [multiformats multi-key
 specification][7].
 
 This document refers to the `wacc` VM API. The normative reference for which can
@@ -273,14 +273,14 @@ off of the parameter stack if it succeeds.
 : Compares the hash associated with the key-path with the hash of the value on
 top of the parameter stack; increments the check counter if it fails. Pops
 one parameter off of the parameter stack if it succeeds. This function
-understands the [Multihash][10] format and is able to generate and
+understands the [Multi-Hash][10] format and is able to generate and
 verify preimages using any hash function it supports.
 
 **check_signature(<key-path>)**
 : Verifies the digital signature and message on the parameter stack using the
 public key associated with the key-path; increments the check counter if it
 fails. Pops two parameters off of the parameter stack if it succeeds. This
-function understands the [Multikey][7] and [Multisig][6]
+function understands the [Multi-Key][7] and [Multi-Sig][6]
 formats and is able to verify any digital signature they support.
 
 ### [Unlock Scripts](#unlock-scripts)
@@ -557,7 +557,7 @@ which is explained further down in this document.
 
 The lock script above executes the `check_signature` function passing it the
 key-path referencing the public key to use. The function first peeks at the
-value on top of the stack to see if there is a [Multisig][6] encoded
+value on top of the stack to see if there is a [Multi-Sig][6] encoded
 digital signature on the top of the stack and checks that it is the same kind
 of signature as the public key. If those match, then the function expects the
 stack to have the digital signature on top with the message just below that. It
@@ -782,7 +782,7 @@ the following mutation `op` values:
 "ops": [
     { "noop": [ "/forks/" ] },
     { "update": [ "/forks/child1/vlad", { "bin": [ <binary child VLAD data> ] } ] },
-    { "update": [ "/forks/child1/pubkey", { "bin": [ <binary child multikey pubkey data> ] } ] },
+    { "update": [ "/forks/child1/pubkey", { "bin": [ <binary child Multi-Key pubkey data> ] } ] },
 ]
 ```
 
@@ -884,10 +884,10 @@ which can then remove the `"/forks/child1/"` branch if so desired.
 [3]: https://github.com/CommunitySpecification/1.0
 [4]: https://github.com/bitcoin/bips/blob/master/bip-0342.mediawiki
 [5]: https://github.com/cryptidtech/provenance-specifications/blob/main/specifications/nonce.md
-[6]: https://github.com/cryptidtech/provenance-specifications/blob/main/specifications/multisig.md
-[7]: https://github.com/cryptidtech/provenance-specifications/blob/main/specifications/multikey.md
+[6]: https://github.com/cryptidtech/provenance-specifications/blob/main/specifications/multi-sig.md
+[7]: https://github.com/cryptidtech/provenance-specifications/blob/main/specifications/multi-key.md
 [8]: https://github.com/cryptidtech/provenance-specifications/blob/main/specifications/wacc.md
 [9]: https://github.com/cryptidtech/provenance-specifications/blob/main/specifications/vlad.md
-[10]: https://github.com/cryptidtech/multihash.git
+[10]: https://github.com/cryptidtech/multi-hash.git
 
 [LIPMAA]: https://github.com/AljoschaMeyer/bamboo/blob/master/README.md#links-and-entry-verification

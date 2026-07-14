@@ -14,8 +14,8 @@ software supply chain, IP management, content authenticity, and identity.
 * [Provenance Logs][PLOGS]
 * [Wasm Cryptographic Constructs API][WACC]
 * Multicodec data objects
-  * [Multikey][4]
-  * [Multisig][5]
+  * [Multi-Key][4]
+  * [Multi-Sig][5]
   * [Nonce][6]
 * [Very Long-lived Addresses (VLADs)][7]
 
@@ -23,8 +23,8 @@ software supply chain, IP management, content authenticity, and identity.
 [1]: https://cryptid.tech
 [2]: https://github.com/cryptidtech/provenance-specifications/
 [3]: https://github.com/multiformats/multiformats
-[4]: https://github.com/cryptidtech/provenance-specifications/blob/main/specifications/multikey.md
-[5]: https://github.com/cryptidtech/provenance-specifications/blob/main/specifications/multisig.md
+[4]: https://github.com/cryptidtech/provenance-specifications/blob/main/specifications/multi-key.md
+[5]: https://github.com/cryptidtech/provenance-specifications/blob/main/specifications/multi-sig.md
 [6]: https://github.com/cryptidtech/provenance-specifications/blob/main/specifications/nonce.md
 [7]: https://github.com/cryptidtech/provenance-specifications/blob/main/specifications/vlad.md
 [PLOGS]: https://github.com/cryptidtech/provenance-specifications/blob/main/specifications/provenance-logs.md

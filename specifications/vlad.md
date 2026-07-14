@@ -76,8 +76,8 @@ which can be found in the [multiformats cid specification][6]
 This document refers to `nonce` values. The normative reference for which can
 be found in the [multiformats nonce specification][7]
 
-This document refers to `multisig` encoded digital signatures. The normative
-reference for which can be found in the [multiformats multisig
+This document refers to `multi-sig` encoded digital signatures. The normative
+reference for which can be found in the [multiformats multi-sig
 specification][8].
 
 ### [Terms and Definitions](#terms-and-definitions)
@@ -104,7 +104,7 @@ vlad sigil     cid value
     nonce value
 ```
 
-In some cases, the `varbytes` in the `nonce` are a `multisig` encoded digital
+In some cases, the `varbytes` in the `nonce` are a `multi-sig` encoded digital
 signature over the `cid` value in the VLAD. The following diagram illustrates a
 signed VLAD.
 
@@ -122,11 +122,11 @@ vlad sigil    cid value
               /
        nonce sigil
 
-<varbytes> ::= <varuint> <multisig octets>
-                   ^             ^
-                  /              |
-          count of          variable number
-            octets         of multisig octets
+<varbytes> ::= <varuint> <multi-sig octets>
+                    ^             ^
+                   /              |
+           count of          variable number
+             octets         of multi-sig octets
 ```
 
 ## [Annex](#annex)
@@ -194,7 +194,7 @@ discuss VLADs as identifiers for provenance logs.
 To reduce the tight binding and fragility of VLADs, they are encoded using the
 multiformats standard. A VLAD therefore begins with the multicodec sigil
 identifying the data as a VLAD (e.g. `0x1207`) followed by two multiformat
-encoded values, a nonce (e.g. `0x123b`) or a multisig (e.g. `0x1239`) followed
+encoded values, a nonce (e.g. `0x123b`) or a multi-sig (e.g. `0x1239`) followed
 by a content addres CID (e.g. `0x01` v1, `0x02` v2, or `0x03` v3).
 
 ### [VLAD Creation](#vlad-creation)
@@ -207,8 +207,8 @@ by a content addres CID (e.g. `0x01` v1, `0x02` v2, or `0x03` v3).
 2. Generate an ephemeral cryptographic public key pair.
 3. Digitally sign the CID of the WASM code to create the random value for the
    VLAD.
-4. Encode the digital signature in the multisig multiformat, concatenate the
-   CID to the multisig and add the VLAD sigil to the front to create a
+4. Encode the digital signature in the multi-sig multiformat, concatenate the
+   CID to the multi-sig and add the VLAD sigil to the front to create a
    multiformat encoded VLAD value.
 
 [0]: https://cryptid.tech
@@ -219,4 +219,4 @@ by a content addres CID (e.g. `0x01` v1, `0x02` v2, or `0x03` v3).
 [5]: https://github.com/multiformats/multicodecs/blob/master/table.csv
 [6]: https://github.com/multiformats/cid/blob/master/README.md
 [7]: https://github.com/cryptidtech/provenance-specifications/blob/main/specifications/nonce.md
-[8]: https://github.com/cryptidtech/provenance-specifications/blob/main/specifications/multisig.md
+[8]: https://github.com/cryptidtech/provenance-specifications/blob/main/specifications/multi-sig.md

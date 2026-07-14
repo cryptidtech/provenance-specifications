@@ -1,4 +1,4 @@
-# Multikey Specification
+# Multi-Key Specification
 **Version: 0.0.1** \
 **Status: Pre-draft** \
 © 2024 Cryptid Technologies, Inc.
@@ -21,7 +21,7 @@ This specification is subject to the [Community Specification License 1.0][COMMU
     3. [Secret Keys](#secret-keys)
 4. [Examples](#examples)
     1. [An Encrypted EdDSA Secret Key](#an-encrypted-eddsa-secret-key)
-    2. [An Es256K Public Key](#an-es256k-public-key)
+    2. [A Secp256k1 Public Key](#a-secp256k1-public-key)
 
 ## [Foreword](#foreword)
 
@@ -63,7 +63,7 @@ block devices.
 
 ### [Current Status](#current-status)
 
-This version of the Multikey specification defines attributes to support
+This version of the Multi-Key specification defines attributes to support
 unencrypted public keys and both encrypted and unencrypted secret keys. The
 attributes also support storing the encrypted key cipher and key derivation
 functions so that the encryption key can be recreated from a secret. There are
@@ -89,23 +89,23 @@ multicodecs table][MULTIFORMATSTABLE].
 : A constant value that maps to a codec or data type.
 
 **Comment**
-: A Multikey object contains a string that describes the key. This is
+: A Multi-Key object contains a string that describes the key. This is
 application specific.
 
 **Attributes**
-: Each Multikey object consists of a set of attributes identified by a
-name/numerical value with an associated binary value. This is how the Multikey
+: Each Multi-Key object consists of a set of attributes identified by a
+name/numerical value with an associated binary value. This is how the Multi-Key
 supports all the different codec-specific data and use cases.
 
 ## [Specification](#specification)
 
-The following diagram shows the overall structure of a Multikey. A Multikey
+The following diagram shows the overall structure of a Multi-Key. A Multi-Key
 is identified by the `0x123a` sigil followed by a codec sigil, comment, and a
-variable number of codec-specific attributes. The multikey sigil is encoded as
+variable number of codec-specific attributes. The Multi-Key sigil is encoded as
 a varuint `0xba24`.
 
 ```
-multikey
+multi-key
 sigil         key comment
 |                  |
 v                  v
@@ -135,26 +135,26 @@ v                  v
             octets            of octets
 ```
 
-The Multikey format is designed to support any kind of arbitrarily complex key
+The Multi-Key format is designed to support any kind of arbitrarily complex key
 data in such a way that tools are able to know exactly how many octets are in
-the Multikey object so that it can skip over it if they don't support the key
+the Multi-Key object so that it can skip over it if they don't support the key
 codec.
 
 ### [Key Comment](#key-comment)
 
 By convention, every key has a comment that is easy to extract from the
-Multikey data structure by any tool, even if they do not support a specific key
+Multi-Key data structure by any tool, even if they do not support a specific key
 codec.
 
 ### [Attributes](#attributes)
 
-Each multikey consists of a set of attributes that are codec-specific and only
+Each Multi-Key consists of a set of attributes that are codec-specific and only
 meaningful through codec-specific "views" on the attribute table. Currently the
 list of defined attributes supports all of the use cases identified so far. The
 design of the attribute store leaves room for new attributes in the future.
 Please file an issue if you have a use case that requires a new attribute type.
 
-**KeyIsEncryptied (0x00)**
+**KeyIsEncrypted (0x00)**
 : The value is a single boolean byte flag; true if the key data is encrypted.
 
 **KeyData (0x01)**
@@ -191,22 +191,58 @@ Please file an issue if you have a use case that requires a new attribute type.
 : Threshold signing codec-specific data. This is typically use to store the 
 accumulated key shares while gathring enough shares to recreate the key.
 
-**AlgorithmName (0x0c)**
-: An arbitrary string name for the algorithm. This is optional and is intended
-to support arbitrary and/or non-standard key types. Some implementations may
-set this attribute for standard algorithm keys but do not rely upon that.
-Interpretation of the algorithm name is application specific.
+**DkgOwnerId (0x0c)**
+: DKG: the VLAD bytes of the session owner.
 
-**KeyType (0x0d)**
-: An arbitrary numeric key type attribute. This is optional and is intended to
-support arbitrary and/or non-standard key types. Some implementations may set
-this attribute for standard algorithm keys but do not rely upon that.
-Interpretation of the key type is application specific.
+**DkgParticipants (0x0d)**
+: DKG: the CBOR-encoded list of participant VLADs.
+
+**DkgThreshold (0x0e)**
+: DKG: the t-of-n threshold value (u16 little-endian).
+
+**DkgLimit (0x0f)**
+: DKG: the t-of-n limit value (u16 little-endian).
+
+**DkgGroupPublicKey (0x10)**
+: DKG: the group public key bytes.
+
+**DkgIdentifier (0x11)**
+: DKG: this participant's frost-dkg identifier bytes.
+
+**DkgSessionId (0x12)**
+: DKG: the session UUID bytes.
+
+**ShareVerifiers (0x13)**
+: Feldman verifier commitment set for a verifiable key share (CBOR list of
+group-element byte strings). Present on Feldman shares of split keys.
+
+**ShareDual (0x14)**
+: Secondary dual share for seed-based keys (Ed25519/X25519): the CBOR
+encoding of the Feldman scalar share carried alongside the gf256 seed
+share. Lets these keys mirror the ECC shares without losing exact restore.
+
+**ThresholdGroupPublicKey (0x15)**
+: Split (Shamir) threshold key: the group/combined BLS public key bytes.
+This is the split-key analogue of `DkgGroupPublicKey`; it is stamped on a
+controller Multi-Key so that the combined threshold signature can be
+verified against the group public key.
+
+**ThresholdParticipants (0x16)**
+: Split (Shamir) threshold key: a CBOR-encoded map from share-identifier
+bytes (the Shamir x-coordinate, exactly as stored in `ShareIdentifier`) to
+a participant record carrying that participant's VLAD and its BLS public
+key share v_i bytes.
+
+**ThresholdMarkerSig (0x17)**
+: Split (Shamir) threshold key: a Multi-Sig (signature) over the canonical
+encoding of the marker bundle (group public key ‖ participants ‖ threshold
+‖ limit), produced by the controller's signing key. Lets a verifier reject
+a tampered marker before trusting it (defeats TSIG-1 marker forgery).
 
 ### [Secret Keys](#secret-keys)
 
 Secret keys are sensitive and should always be kept encrypted when at rest.
-The attributes in the Multikey specify whether the key is encrypted and which
+The attributes in the Multi-Key specify whether the key is encrypted and which
 encryption method was used as well as the key derivation method and parameters.
 
 This applies to both symmetric keys as well as the secret key part of a public
@@ -216,12 +252,12 @@ key pair.
 
 ### [An Encrypted EdDSA Secret Key](#an-encrypted-eddsa-secret-key)
 
-This example shows how a Multikey stores an EdDSA private key encrypted using
+This example shows how a Multi-Key stores an EdDSA private key encrypted using
 the ChaCha20-Poly1305 AEAD symmetric encryption algorithm using a key derived
 using the Bcrypt PBKDF function with 10 rounds and a 32-byte salt value:
 
 ```
-ba 24               -- varuint, multikey sigil (0x123a)
+ba 24               -- varuint, multi-key sigil (0x123a)
 80 26               -- varuint, Ed25519 private key codec (0x1300)
 08                  -- varuint, length of comment 
   "test key"        -- 8 octets of UTF-8 comment data
@@ -239,8 +275,8 @@ ba 24               -- varuint, multikey sigil (0x123a)
     01              -- varuint, attribute length
       20            -- 32 byte key length
   04                -- varuint, AttrId::CipherNonce
-    08              -- varuint, attribute length
-      [8 octets]    -- nonce
+    0c              -- varuint, attribute length
+      [12 octets]   -- nonce
   05                -- varuint, AttrId::KdfCodec
     03              -- varuint, attribute length
       8d a0 03      -- varuint, Bcrypt KDF codec
@@ -252,11 +288,11 @@ ba 24               -- varuint, multikey sigil (0x123a)
       0a            -- varuint, 10 kdf rounds
 ```
 
-In this example the encoding starts off with the multikey sigil (`0xba24`)
+In this example the encoding starts off with the Multi-Key sigil (`0xba24`)
 followed by the varuint codec value for an EdDSA private key (`0x8026`).
 Following that there is the key comment encoded as varbytes with a varuint 
 length value followed by that number of octets of UTF-8 string data; in this 
-case `"test key"`. The rest of the encoded Multikey is the list of attributes.
+case `"test key"`. The rest of the encoded Multi-Key is the list of attributes.
 All attributes are optional. Each attribute has an attribute ID followed by the
 varuint encoded length of the attribute data followed by the octets of
 attribute data. In this case of an encrypted EdDSA secret key, there are
@@ -264,13 +300,13 @@ attributes for the flag showing it is encrypted, the encrypted key bytes, the
 encryption codec, the encryption key length, the nonce length, the nonce data,
 the kdf codec, the kdf salt length, the kdf salt, and the kdf rounds.
 
-### [An Es256K Public Key](#an-es256k-public-key)
+### [A Secp256k1 Public Key](#a-secp256k1-public-key)
 
-This example shows how a Multikey encodes an Es256K public key.
+This example shows how a Multi-Key encodes an secp256k1 public key.
 
 ```
-ba 24               -- varuint, multikey sigil  (0x123a)
-81 26               -- varuint, secp256k1 public key codec (0x1301)
+ba 24               -- varuint, multi-key sigil  (0x123a)
+e7 01               -- varuint, secp256k1 public key codec (0xe7)
 08                  -- varuint, length of comment
   "test key"        -- 8 octets of UTF-8 comment data
 01                  -- varuint, 1 attribute
@@ -279,9 +315,9 @@ ba 24               -- varuint, multikey sigil  (0x123a)
       [33 octets]   -- key data
 ```
 
-In this example the encoding starts off with the multikey sigil (`0xba24`)
+In this example the encoding starts off with the Multi-Key sigil (`0xba24`)
 followed by the varuint encoded codec value for an secp256k1 public key
-(`0x8126`). Following that is 8 octets of UTF-8 comment data and the varuint 
+(`0xe701`). Following that is 8 octets of UTF-8 comment data and the varuint 
 encoded number of attributes in the attributes table. In this case there is 
 only one attrbute, the key data itself which is encoded as the varuint 
 encoded `KeyData` attribute ID, followed by the varuint encoded attribute

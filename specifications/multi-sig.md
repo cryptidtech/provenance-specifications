@@ -1,4 +1,4 @@
-# Multisig Specification
+# Multi-Sig Specification
 **Version: 0.0.1** \
 **Status: Pre-draft** \
 © 2024 Cryptid Technologies, Inc.
@@ -19,8 +19,8 @@ This specification is subject to the [Community Specification License 1.0][3].
     1. [Signature Message](#signature-message)
     2. [Attributes](#attributes)
 4. [Examples](#examples)
-    1. [An EdDSA Multisig](#an-eddsa-multisig)
-    2. [A BLS12-381 G1 Multisig Share](#a-bls12-381-g1-multisig-share)
+    1. [An EdDSA Multi-Sig](#an-eddsa-multi-sig)
+    2. [A BLS12-381 G1 Multi-Sig Share](#a-bls12-381-g1-multi-sig-share)
 
 ## [Foreword](#foreword)
 
@@ -56,11 +56,12 @@ NOT THE OTHER MEMBER HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 This specification outlines how to encode arbitrary digital signatures data in 
 a codec-agnostic way while also supporting codec-specific attribute read-write 
 and codec-specific cryptographic operations. Digital signatures are created 
-from Multikey values and data to be signed.
+from Multi-Key values and data to be signed.
 
 ### [Current Status](#current-status)
 
-This version of the Multisig specification 
+This version of the Multi-Sig specification defines attributes for signature
+data, payload encoding, and threshold signature shares.
 
 ### [Normative References](#normative-references)
 
@@ -81,13 +82,13 @@ multicodecs table][5].
 : A constant value that maps to a codec or data type.
 
 **Attributes**
-: Each Multisig object consists of a set of attributes identified by a
-name/numerical value with an associated binary value. This is how the Multikey
+: Each Multi-Sig object consists of a set of attributes identified by a
+name/numerical value with an associated binary value. This is how the Multi-Key
 supports all the different codec-specific data and use cases.
 
 ## [Specification](#specification)
 
-The following diagram explains the overall structure of a Multisig. A Multisig
+The following diagram explains the overall structure of a Multi-Sig. A Multi-Sig
 is identified by the `0x1239` sigil followed by a key codec sigil, message, and
 a variable number of codec-specific attributes. The sigil is encoded as a
 varuint `0xb924`.
@@ -99,7 +100,7 @@ signing codec sigil     signature attributes
 0xb924 <varuint> <message> <attributes>
 ^                  ^
 |                  |
-multisig    optional combined
+multi-sig    optional combined
 sigil       signature message
 
 <message> ::= <varbytes>
@@ -122,19 +123,19 @@ sigil       signature message
             octets            of octets
 ```
 
-The Multisig format allows tools that don't recognize the signing codec--or any
+The Multi-Sig format allows tools that don't recognize the signing codec--or any
 of this format other than varuint and varbytes--to know how many octets are in
-the Multisig data object and skip over it. This format is also designed to
+the Multi-Sig data object and skip over it. This format is also designed to
 support any kind of digital signature, even signatures with multiple signature
 payloads such as threshold signatures. This also supports building combined
 signatures that contain the signed data in the `message` part of the signature.
 
 ### [Signature Message](#signature-message)
 
-In a Multisig object, the message is optional. When present, the Multisig is 
+In a Multi-Sig object, the message is optional. When present, the Multi-Sig is 
 called a "combined" signature. When it isn't present, this is a "detached" 
 signature. Either way the message that is signed, as well as the verifying
-Multikey, are required to verify the validity of a Multisig signature.
+Multi-Key, are required to verify the validity of a Multi-Sig signature.
 
 ### [Attributes](#attributes)
 
@@ -160,21 +161,15 @@ Multikey, are required to verify the validity of a Multisig signature.
 : Codec-speicific threshold signature data. This is typically used to 
 accumulate threshold signature shares.
 
-**AlgorithmName (0x07)**
-: An arbitrary string name for the algorithm. This is optional and is intended
-to support arbitrary and/or non-standard signature types. Some implementations
-may set this attribute for standard algorithm signatures but do not rely upon
-that. Interpretation of the algorithm name is application specific.
-
 ## [Examples](#examples)
 
-### [An EdDSA Multisig](#an-eddsa-multisig)
+### [An EdDSA Multi-Sig](#an-eddsa-multi-sig)
 
-This example shows how a Multisig stores an EdDSA digital signature:
+This example shows how a Multi-Sig stores an EdDSA digital signature:
 
 ```
-b9 24               -- varuint, Multisig sigil (0x1239)
-83 a6 c0 06         -- varuint, EdDSA multisig codec (0xd01303)
+b9 24               -- varuint, Multi-Sig sigil (0x1239)
+83 a6 c0 06         -- varuint, EddsaMsig codec (0xd01303)
 00                  -- varuint, message length (0), detached signature
 01                  -- varuint, number of attributes
   00                -- varuint, AttrId::SigData
@@ -182,14 +177,14 @@ b9 24               -- varuint, Multisig sigil (0x1239)
       [64 octets]   -- signature data
 ```
 
-### [A BLS12-381 G1 Multisig Share](#a-bls12-381-g1-multisig-share)
+### [A BLS12-381 G1 Multi-Sig Share](#a-bls12-381-g1-multi-sig-share)
 
 This examples shows how a Multsig with a BLS12-381 G1 signature share is
 encoded:
 
 ```
-b9 24               -- varuint, Multisig sigil (0x1239)
-84 a6 c0 06         -- varuint, Bls12381G1SigShare sigil (0xd01304)
+b9 24               -- varuint, Multi-Sig sigil (0x1239)
+84 a6 c0 06         -- varuint, Bls12381G1ShareMsig sigil (0xd01304)
 00                  -- varuint, message length (0), detached signature
 05                  -- varuint, number of attributes
   00                -- varuint, AttrId::SigData

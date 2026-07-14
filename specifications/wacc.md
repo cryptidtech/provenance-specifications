@@ -70,12 +70,12 @@ use cases please file a proposal as an issue in this repository.
 This document refers to `nonce` values. The normative reference for which can
 be found in the [multiformats nonce specification][5]
 
-This document refers to `multisig` encoded digital signatures. The normative
-reference for which can be found in the [multiformats multisig
+This document refers to `multi-sig` encoded digital signatures. The normative
+reference for which can be found in the [multiformats multi-sig
 specification][6].
 
-This document refers to `multikey` encoded cryptography keys. The normative
-reference for which can be found in the [multiformats multikey
+This document refers to `multi-key` encoded cryptography keys. The normative
+reference for which can be found in the [multiformats multi-key
 specification][7].
 
 ### [Terms and Definitions](#terms-and-definitions)
@@ -129,5 +129,5 @@ This example shows how to use the WACC API to use the unlock script
 [3]: https://github.com/CommunitySpecification/1.0
 [4]: https://github.com/bitcoin/bips/blob/master/bip-0342.mediawiki
 [5]: https://github.com/cryptidtech/provenance-specifications/blob/main/specifications/nonce.md
-[6]: https://github.com/cryptidtech/provenance-specifications/blob/main/specifications/multisig.md
-[7]: https://github.com/cryptidtech/provenance-specifications/blob/main/specifications/multikey.md
+[6]: https://github.com/cryptidtech/provenance-specifications/blob/main/specifications/multi-sig.md
+[7]: https://github.com/cryptidtech/provenance-specifications/blob/main/specifications/multi-key.md
